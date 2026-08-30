@@ -1,3 +1,4 @@
+try {
 // PONDs GAS Backend Interceptor with Local-First & Optimistic UI
 
 (function() {
@@ -195,3 +196,5 @@
     }
 
 })();
+
+} catch (e) { console.error("GAS Backend Error:", e); }
