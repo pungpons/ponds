@@ -50,6 +50,7 @@
         })();
     </script>
     <script src="gas_backend.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body class="h-[100dvh] flex flex-col font-sans bg-slate-50 text-slate-900 dark:bg-[#0f172a] dark:text-white relative overflow-hidden">
     
@@ -63,16 +64,23 @@
     <div id="lockScreen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#f4f5f7]/80 dark:bg-[#101014]/80 backdrop-blur-md transition-opacity duration-300">
         <div class="backdrop-blur-xl bg-white/70 dark:bg-white/5 p-8 rounded-3xl shadow-xl dark:shadow-2xl w-full max-w-md text-center border border-black/5 dark:border-white/10 transition-colors duration-500">
           <div class="w-auto px-6 h-24 rounded-[28%] bg-gradient-to-r from-blue-700 to-indigo-800 mx-auto mb-6 flex items-center justify-center text-white text-5xl font-bold tracking-wider shadow-xl shadow-indigo-900/30 inline-flex">POND</div>
-          <h2 class="text-2xl font-bold mb-2 text-gray-900 dark:text-white">Welcome</h2>
-          <p class="text-slate-500 dark:text-white/60 mb-8 text-sm">Paste your Google Apps Script (GAS) Web App URL to connect your backend.</p>
+          <h2 class="text-2xl font-bold mb-2 text-gray-900 dark:text-white">Secure Access</h2>
+          <p class="text-slate-500 dark:text-white/60 mb-8 text-sm">Please sign in with your authorized Google Account to access PONDs.</p>
           
-          <!-- GAS URL Input -->
-          <form id="gas-setup-form" class="flex flex-col gap-4">
-              <input type="url" id="gas-url-input" required placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 placeholder-slate-400 dark:placeholder-white/30 focus:bg-white dark:focus:bg-white/10 focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm text-left dark:text-white">
-              <button type="submit" class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-lg shadow-indigo-500/30 transition-all active:scale-[0.98]">
-                  Connect Backend
-              </button>
-          </form>
+          <div id="g_id_onload"
+               data-client_id="636153093113-figfghllvhd43j1ihlj3i8dog73r8kb9.apps.googleusercontent.com"
+               data-callback="handleCredentialResponse"
+               data-auto_prompt="false">
+          </div>
+          <div class="g_id_signin flex justify-center"
+               data-type="standard"
+               data-size="large"
+               data-theme="outline"
+               data-text="sign_in_with"
+               data-shape="pill"
+               data-logo_alignment="left">
+          </div>
+          
           <p id="loginErrorMsg" class="text-red-500 text-sm mt-4 hidden"></p>
         </div>
     </div>

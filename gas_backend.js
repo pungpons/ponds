@@ -2,47 +2,64 @@
 
 (function() {
     // 1. Check if we have GAS URL
-    const gasUrl = localStorage.getItem('pond_gas_url');
+    let gasUrl = localStorage.getItem('pond_gas_url') || 'https://script.google.com/macros/s/AKfycbxWpgNAYLkjIWtGUhDpR41JBw6iHmQMvP0soutqg7RqEmfzhnzLjVDbvmSLbGV3048k/exec';
     
     // UI Logic for index.html lock screen
+    const ALLOWED_EMAILS = ['wisut.pond@gmail.com', 'pungpons@gmail.com'];
+    let userEmail = localStorage.getItem('pond_user_email');
+    
+    // Global callback for Google Sign-In
+    window.handleCredentialResponse = (response) => {
+        try {
+            // Decode JWT
+            const base64Url = response.credential.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            const payload = JSON.parse(jsonPayload);
+            
+            if (ALLOWED_EMAILS.includes(payload.email) || ALLOWED_EMAILS.length === 0) {
+                localStorage.setItem('pond_user_email', payload.email);
+                window.location.reload();
+            } else {
+                const errorMsg = document.getElementById('loginErrorMsg');
+                if (errorMsg) {
+                    errorMsg.textContent = 'Access Denied: Unauthorized account (' + payload.email + ')';
+                    errorMsg.classList.remove('hidden');
+                }
+            }
+        } catch (e) {
+            console.error('Error parsing token', e);
+        }
+    };
+
     window.addEventListener('DOMContentLoaded', () => {
         const lockScreen = document.getElementById('lockScreen');
-        const gasForm = document.getElementById('gas-setup-form');
-        const gasInput = document.getElementById('gas-url-input');
         const loginBtn = document.getElementById('loginBtn'); // Sign out button
         
-        if (gasForm) {
-            if (gasUrl) {
-                // Already configured, hide lock screen
-                if (lockScreen) lockScreen.classList.add('hidden');
+        // If this page has a lock screen (index.html)
+        if (lockScreen) {
+            if (userEmail) {
+                lockScreen.classList.add('hidden');
                 if (loginBtn) loginBtn.classList.remove('hidden');
             } else {
-                // Show lock screen
-                if (lockScreen) lockScreen.classList.remove('hidden');
+                lockScreen.classList.remove('hidden');
             }
-            
-            gasForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const url = gasInput.value.trim();
-                if (url.startsWith('https://script.google.com/')) {
-                    localStorage.setItem('pond_gas_url', url);
-                    window.location.reload();
-                } else {
-                    alert('Please enter a valid Google Apps Script Web App URL.');
-                }
-            });
+        } else {
+            // For other pages, redirect to index.html if not logged in
+            if (!userEmail) {
+                window.location.href = 'index.html';
+            }
         }
 
         if (loginBtn) {
-            // Change "Sign Out" to "Disconnect"
-            loginBtn.title = "Disconnect Backend";
+            loginBtn.title = "Sign Out";
             loginBtn.addEventListener('click', (e) => {
-                // Override default logout if there is one
                 e.preventDefault();
                 e.stopPropagation();
-                if(confirm('Disconnect GAS Backend?')) {
-                    localStorage.removeItem('pond_gas_url');
-                    localStorage.removeItem('pond_ai_token'); // clear old tokens
+                if(confirm('Sign out?')) {
+                    localStorage.removeItem('pond_user_email');
                     window.location.href = 'index.html';
                 }
             });
