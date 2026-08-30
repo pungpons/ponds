@@ -140,8 +140,17 @@
                 // Otherwise the UI receives empty data and shows blank fields until next refresh.
                 const res = await callGas(url, options, gasUrl);
                 
-                // Optional: after a successful save, we could clear the GET caches related to this API 
-                // to force a fresh fetch next time, but for now we just return the real response.
+                // Invalidate cache on mutation so the next GET fetches fresh data!
+                if (res.ok) {
+                    const keysToRemove = [];
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const k = localStorage.key(i);
+                        if (k && k.startsWith('gas_cache_')) {
+                            keysToRemove.push(k);
+                        }
+                    }
+                    keysToRemove.forEach(k => localStorage.removeItem(k));
+                }
                 return res;
             }
         }
