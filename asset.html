@@ -712,6 +712,35 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
                 box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
             }
             
+            
+            /* Page Break Logic */
+            .print-card-item, .space-y-4 > div, .space-y-6 > div, .space-y-8 > div, tr, table {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            
+            /* Prevent text spill */
+            * {
+                box-sizing: border-box !important;
+            }
+            p, span, div, td, th, li {
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+                word-break: break-word !important;
+                white-space: normal !important;
+                max-width: 100% !important;
+            }
+            
+            /* Fix overflow */
+            .a4-container {
+                overflow: hidden !important;
+            }
+            
+            /* Give some breathing room */
+            .print-card-item {
+                margin-bottom: 20px !important;
+            }
+
             /* Professional Overrides for the cloned DOM */
             #report-printable-preview {
                 box-shadow: none !important;
@@ -722,7 +751,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
             /* Emphasize headers */
             h3, h4, h5 { color: #1e1b4b !important; font-weight: 700 !important; }
             /* Tables */
-            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            table { width: 100% !important; border-collapse: collapse; margin-top: 10px; table-layout: fixed !important; }
             th { background-color: #f1f5f9 !important; color: #334155 !important; font-weight: bold; padding: 8px; text-align: left; border-bottom: 2px solid #cbd5e1; }
             td { padding: 8px; border-bottom: 1px solid #e2e8f0; }
             
