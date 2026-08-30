@@ -75,6 +75,23 @@
         display: block !important;
     }
 }
+
+@media print {
+    * {
+        min-height: 0 !important;
+        max-height: none !important;
+    }
+    body, html, #root, #root > div, main, #main-wrapper, .min-h-screen, .flex-1, .flex-col {
+        height: auto !important;
+        overflow: visible !important;
+        position: static !important;
+        display: block !important;
+    }
+    /* Hide non-printable stuff aggressively just in case */
+    .no-print, nav, header {
+        display: none !important;
+    }
+}
 </style>
     <script type="module" crossorigin>(function(){const l=document.createElement("link").relList;if(l&&l.supports&&l.supports("modulepreload"))return;for(const c of document.querySelectorAll('link[rel="modulepreload"]'))o(c);new MutationObserver(c=>{for(const m of c)if(m.type==="childList")for(const d of m.addedNodes)d.tagName==="LINK"&&d.rel==="modulepreload"&&o(d)}).observe(document,{childList:!0,subtree:!0});function r(c){const m={};return c.integrity&&(m.integrity=c.integrity),c.referrerPolicy&&(m.referrerPolicy=c.referrerPolicy),c.crossOrigin==="use-credentials"?m.credentials="include":c.crossOrigin==="anonymous"?m.credentials="omit":m.credentials="same-origin",m}function o(c){if(c.ep)return;c.ep=!0;const m=r(c);fetch(c.href,m)}})();var _u={exports:{}},ul={};/**
  * @license React

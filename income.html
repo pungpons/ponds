@@ -132,6 +132,23 @@ if (pondToken) {
         display: block !important;
     }
 }
+
+@media print {
+    * {
+        min-height: 0 !important;
+        max-height: none !important;
+    }
+    body, html, #root, #root > div, main, #main-wrapper, .min-h-screen, .flex-1, .flex-col {
+        height: auto !important;
+        overflow: visible !important;
+        position: static !important;
+        display: block !important;
+    }
+    /* Hide non-printable stuff aggressively just in case */
+    .no-print, nav, header {
+        display: none !important;
+    }
+}
 </style> </head> <body> <div id="root"></div> 
 
 
