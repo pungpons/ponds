@@ -40,12 +40,12 @@
     };
 
 
-    // Register Service Worker for Instant Page Loads
+    // Unregister Service Worker to fix iOS print bug
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js').catch(err => {
-                console.log('SW registration failed: ', err);
-            });
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for(let registration of registrations) {
+                registration.unregister();
+            }
         });
     }
 
