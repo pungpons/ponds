@@ -21,6 +21,7 @@
             
             if (ALLOWED_EMAILS.includes(payload.email) || ALLOWED_EMAILS.length === 0) {
                 localStorage.setItem('pond_user_email', payload.email);
+                localStorage.setItem('user_email', payload.email);
                 window.location.reload();
             } else {
                 const errorMsg = document.getElementById('loginErrorMsg');
