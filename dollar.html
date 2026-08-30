@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+
+
+
+<script>
+// Auto-login (SSO) from POND AI
+if (localStorage.getItem('pond_ai_token')) {
+    localStorage.setItem('user_email', 'wisut.pond@gmail.com');
+}
+</script>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dollar exchange - Google Apps Script Web App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Sarabun', 'Plus Jakarta Sans', sans-serif; }
+  </style>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
+  
+  <script>
+    // 👇 นำมาวางไว้บรรทัดแรกในแท็ก <script> ตรงนี้ได้เลยครับ 👇
+    const GOOGLE_CLIENT_ID = "636153093113-figfghllvhd43j1ihlj3i8dog73r8kb9.apps.googleusercontent.com";
+  </script>
+    <script src="gas_backend.js"></script>
+</head>
+
+
+
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 min-h-screen flex flex-col overflow-x-hidden selection:bg-emerald-500 selection:text-white transition-colors">
+
+  <!-- Login Screen -->
+  <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4 transition-opacity duration-300">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-8 max-w-sm w-full text-center">
+      <div class="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm border border-emerald-200 dark:border-emerald-800/50">
+        <svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      </div>
+      <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">Dollar Exchange</h2>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mb-8">เข้าสู่ระบบเพื่อจัดการพอร์ตการลงทุนและบันทึกประวัติแลกเปลี่ยนของคุณ</p>
+      
+      <div id="gsiButtonContainer"></div>
+    </div>
+  </div>
+
+  <div id="mainApp" class="hidden min-h-screen w-full flex-col">
+
+  
+    <!-- Navigation Header -->
+    <header class="bg-white dark:bg-slate-800 border-b border-slate-200/80 sticky top-0 z-40 shadow-sm">
+      <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-[60px] sm:h-16 flex items-center justify-between gap-3">
+        
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-lg shadow-sm shrink-0">
+            $
+          </div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-[15px] sm:text-base font-bold text-slate-900 dark:text-slate-50 leading-tight">Dollar Exchange</h1>
+          </div>
+        </div>
+
+        <!-- Right Action Controls -->
+        <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          
+          <!-- Theme Switcher Button Group -->
+          <div class="flex items-center p-0.5 bg-white dark:bg-slate-800 rounded-[10px] border border-slate-200 dark:border-slate-700 shrink-0 shadow-sm gap-0.5" id="themeSwitcher">
+            <button onclick="setTheme('auto')" id="btnThemeAuto" class="p-1.5 rounded-lg text-xs transition flex items-center justify-center cursor-pointer text-emerald-600 bg-emerald-50/50" title="ธีมอัตโนมัติ">
+              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg>
+            </button>
+            <button onclick="setTheme('light')" id="btnThemeLight" class="p-1.5 rounded-lg text-xs transition flex items-center justify-center cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700" title="โหมดสว่าง">
+              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+            </button>
+            <button onclick="setTheme('dark')" id="btnThemeDark" class="p-1.5 rounded-lg text-xs transition flex items-center justify-center cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700" title="โหมดมืด">
+              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+            </button>
+          </div>
+
+          <!-- User Auth Section -->
+          <div class="flex items-center gap-1.5 sm:gap-2 pl-1.5 sm:pl-2 border-l border-slate-200 dark:border-slate-700 shrink-0">
+            
+            <button onclick="handleSignOut()" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition border border-slate-200 dark:border-slate-700 shadow-sm cursor-pointer" title="ออกจากระบบ">
+              <span id="userEmailDisplay" class="max-w-[120px] truncate">User</span>
+              <svg class="w-3.5 h-3.5 shrink-0 text-slate-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            </button>
+
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Content -->
+    <main class="flex-1 w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+
+    <!-- Real-time USD/THB Rate Banner -->
+    <div class="bg-[#0f172a] text-white rounded-[14px] p-3 shadow-sm border border-slate-800/60 flex items-center gap-3.5 mb-3">
+      <div class="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center border border-emerald-500/20 shrink-0">
+        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg>
+      </div>
+      <div class="flex flex-col justify-center">
+        <div class="flex items-center gap-2 mb-0.5">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Real-time Exchange Rate</span>
+          <span class="inline-flex items-center gap-1 text-[9px] font-bold bg-[#064e3b] text-emerald-300 px-1.5 py-0.5 rounded-sm">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            Live Rate
+          </span>
+        </div>
+        <div class="flex items-baseline gap-2">
+          <span class="text-lg font-mono font-bold text-emerald-400 tracking-tight" id="liveRateDisplay">
+            1 USD = 33.5256 THB
+          </span>
+          <button onclick="refreshRate()" class="p-1 text-slate-400 hover:text-white rounded hover:bg-white/10 transition cursor-pointer" title="อัปเดตอัตราแลกเปลี่ยนล่าสุด">
+            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BucketTabs -->
+    <div class="bg-white dark:bg-slate-800 p-2.5 sm:p-3 rounded-[14px] border border-slate-200 dark:border-slate-700 shadow-sm mb-3 flex flex-wrap items-center gap-2.5">
+      <div class="flex flex-wrap items-center gap-2" id="bucketTabs">
+        <!-- Generated by JS -->
+      </div>
+      <button onclick="openBucketModal()" class="px-3 py-1.5 rounded-[8px] text-[13px] font-bold text-slate-600 dark:text-slate-400 hover:text-[#059669] border-[1.5px] border-dashed border-slate-300 dark:border-slate-600 hover:border-[#059669] hover:bg-emerald-50 transition flex items-center gap-1.5 shrink-0 cursor-pointer w-max">
+        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>เพิ่มชุดข้อมูลใหม่</span>
+      </button>
+    </div>
+
+    <!-- Summary Cards Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+      <div class="bg-white dark:bg-slate-800 rounded-[14px] border border-slate-200 dark:border-slate-700 shadow-sm p-4 flex flex-col justify-between gap-2">
+        <div class="flex items-center justify-between gap-2">
+          <p class="text-[13px] font-bold text-slate-500 dark:text-slate-400 leading-snug">ยอดเงินดอลลาร์สะสม</p>
+          <div class="w-6 h-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs shrink-0">$</div>
+        </div>
+        <div class="flex items-baseline gap-1.5 flex-wrap">
+          <p id="statTotalUsd" class="text-[22px] sm:text-2xl font-bold text-slate-900 dark:text-slate-50 tracking-tight leading-none">$0.00</p>
+          <p id="statUsdValueThb" class="text-xs text-slate-400 font-medium leading-none mt-1">≈ ฿0.00</p>
+        </div>
+      </div>
+      <div class="bg-white dark:bg-slate-800 rounded-[14px] border border-slate-200 dark:border-slate-700 shadow-sm p-4 flex flex-col justify-between gap-2">
+        <div class="flex items-center justify-between gap-2">
+          <p class="text-[13px] font-bold text-slate-500 dark:text-slate-400 leading-snug">เงินบาทที่ใช้ไปทั้งหมด</p>
+          <div class="w-6 h-6 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center font-bold text-xs shrink-0">฿</div>
+        </div>
+        <div class="flex items-baseline gap-1.5 flex-wrap">
+          <p id="statTotalThb" class="text-[22px] sm:text-2xl font-bold text-slate-900 dark:text-slate-50 tracking-tight leading-none">฿0.00</p>
+          <p id="statProfitLoss" class="text-xs font-bold text-emerald-600 leading-none mt-1">+ส่วนต่าง ฿0.00 (+0.00%)</p>
+        </div>
+      </div>
+      <div class="bg-white dark:bg-slate-800 rounded-[14px] border border-slate-200 dark:border-slate-700 shadow-sm p-4 flex flex-col justify-between gap-2">
+        <div class="flex items-center justify-between gap-2">
+          <p class="text-[13px] font-bold text-slate-500 dark:text-slate-400 leading-snug">อัตราแลกเปลี่ยนเฉลี่ย</p>
+          <div class="w-6 h-6 rounded-md bg-indigo-50 text-indigo-500 flex items-center justify-center shrink-0"><svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg></div>
+        </div>
+        <div class="flex items-baseline gap-1.5 flex-wrap">
+          <p id="statAvgRate" class="text-[22px] sm:text-2xl font-bold text-slate-900 dark:text-slate-50 tracking-tight leading-none">0.00</p>
+          <p class="text-xs text-slate-400 font-medium leading-none mt-1">THB per 1 USD (ต้นทุนเฉลี่ย)</p>
+        </div>
+      </div>
+    </div>
+    <!-- Transaction List Table -->
+    <div class="bg-white dark:bg-slate-800 rounded-[14px] border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
+      <!-- Table Header Controls -->
+      <div class="px-3.5 sm:px-4 py-1.5 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2.5">
+        <div class="flex items-center gap-2">
+          <h3 class="font-bold text-slate-800 dark:text-white text-sm sm:text-base flex items-center gap-2">
+            <span>ประวัติการแลกเปลี่ยน</span>
+            <span id="txCountBadge" class="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 text-xs font-bold px-2 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-800/60">
+              0 รายการ
+            </span>
+          </h3>
+        </div>
+        
+        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <!-- Search Box -->
+          <div class="relative flex-1 sm:w-52">
+            <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" x2="16.65" y1="21" y2="16.65"></line></svg>
+            <input type="text" id="searchInput" placeholder="ค้นหาตามวันที่, หมายเหตุ..." oninput="render()" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg pl-7 pr-2.5 py-1 text-xs text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white dark:focus:bg-slate-900 transition-colors" />
+          </div>
+
+          <!-- Sort Dropdown -->
+          <div class="flex items-center gap-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-xs">
+            <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg>
+            <select id="sortInput" onchange="render()" class="bg-transparent font-medium text-slate-700 dark:text-slate-300 outline-none cursor-pointer text-xs appearance-none pr-1">
+              <option value="newest" class="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100">ล่าสุดก่อน</option>
+              <option value="oldest" class="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100">เก่าสุดก่อน</option>
+              <option value="highest_thb" class="bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100">ยอดบาทสูงสุด</option>
+            </select>
+          </div>
+
+          <!-- Add New Button -->
+          <button onclick="openModal()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-xs font-medium shadow-2xs transition cursor-pointer">
+            บันทึกรายการใหม่
+          </button>
+        </div>
+      </div>
+
+      
+      <div class="hidden md:block overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+          <thead class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800">
+            <tr>
+              <th class="px-4 py-2 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">วันที่บันทึก</th>
+              <th class="px-4 py-2 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">ชุดข้อมูล</th>
+              <th class="px-4 py-2 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">จำนวนเงิน (THB)</th>
+              <th class="px-4 py-2 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">จำนวนเงิน (USD)</th>
+              <th class="px-4 py-2 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">เรทที่แลกได้</th>
+              <th class="px-4 py-2 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">หมายเหตุ</th>
+              <th class="px-4 py-2 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-center">จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="txTableBody" class="divide-y divide-slate-50 dark:divide-slate-800">
+
+            <!-- Table rows dynamically generated -->
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Mobile Card List View -->
+      <div id="txMobileList" class="block md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+      </div>
+
+            <!-- Table rows dynamically generated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+      </div>
+    </div>
+
+  </div>
+  <!-- Popup Modal Window for Add Transaction -->
+  <div id="modalOverlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-4 z-50">
+    <div class="bg-white dark:bg-slate-800 rounded-[16px] shadow-2xl max-w-[360px] w-full p-0 overflow-hidden border border-slate-200 dark:border-slate-700">
+      <div class="bg-[#111827] text-white px-4 py-3.5 flex items-start justify-between border-b border-slate-800">
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30 font-bold text-base shrink-0 mt-0.5">
+            $
+          </div>
+          <div>
+            <h3 id="modalTitle" class="font-bold text-[14px] text-white leading-tight mb-1">เพิ่มรายการแลกเงินใหม่</h3>
+            <p class="text-[11px] text-slate-400 leading-snug">บันทึกการแลก THB เป็น USD ลงในพอร์ตและ Google Sheet</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeModal()" class="text-slate-400 hover:text-white p-1 rounded-md hover:bg-slate-800 transition shrink-0 ml-2">
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <form id="txForm" onsubmit="handleFormSubmit(event)" class="p-4 space-y-4">
+        <!-- Bucket -->
+        <div>
+          <label class="block text-[12px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">เลือกชุดข้อมูล / บัญชีแลกเงิน</label>
+          <div class="relative">
+            <select id="formBucket" class="h-9 w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg pl-3 pr-8 text-[13px] font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer appearance-none">
+              <!-- options inserted JS -->
+            </select>
+            <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-slate-400">
+              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Date & Time -->
+        <div class="flex gap-2">
+          <div class="flex-1 min-w-0">
+            <label class="flex items-center gap-1.5 text-[12px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              <svg class="w-3.5 h-3.5 text-slate-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+              วันที่
+            </label>
+            <input type="date" id="formDate" required class="h-9 w-full min-w-0 appearance-none bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-center text-[13px] font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
+          </div>
+          <div class="flex-1 min-w-0">
+            <label class="flex items-center gap-1.5 text-[12px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              <svg class="w-3.5 h-3.5 text-slate-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              เวลา
+            </label>
+            <input type="time" id="formTime" required class="h-9 w-full min-w-0 appearance-none bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2 text-center text-[13px] font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
+          </div>
+        </div>
+
+
+
+        <!-- THB -->
+        <div>
+          <label class="block text-[12px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">จำนวนเงินบาทที่จ่าย (THB)</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <span class="text-slate-400 font-bold text-[13px]">฿</span>
+            </div>
+            <input type="number" step="0.01" id="formThb" oninput="calculateOnThbChange()" required placeholder="เช่น 18000" class="h-9 w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg pl-8 pr-8 text-[13px] font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none">
+            <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-slate-400">
+              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rate & USD -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="flex items-center gap-1.5 text-[12px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              <svg class="w-3.5 h-3.5 text-slate-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>
+              เรท (THB/USD)
+            </label>
+            <div class="relative">
+              <input type="number" step="0.000001" id="formRate" oninput="calculateOnRateChange()" required class="h-9 w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg pl-3 pr-8 text-[13px] font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none">
+              <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-slate-400">
+                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label class="block text-[12px] font-bold text-slate-700 dark:text-slate-300 mb-1.5">ยอดที่ได้ (USD)</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <span class="text-emerald-500 font-bold text-[13px]">$</span>
+              </div>
+              <input type="number" step="0.01" id="formUsd" oninput="calculateOnUsdChange()" required placeholder="เช่น 500" class="h-9 w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg pl-7 pr-8 text-[13px] font-bold text-emerald-600 focus:ring-2 focus:ring-emerald-500 outline-none">
+              <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-slate-400">
+                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Est Receive Box -->
+        <div class="bg-emerald-50/80 border border-emerald-100 rounded-lg p-3 flex items-center justify-between mt-1 mb-1">
+          <span class="text-[12px] font-bold text-emerald-700">คุณจะได้รับประมาณ</span>
+          <span class="text-[15px] font-extrabold text-emerald-700" id="formEstReceive">$ 0.00</span>
+        </div>
+
+        <!-- Fee and Note -->
+        <div class="flex gap-3">
+          <div class="w-[110px] shrink-0">
+             <label class="block text-[12px] font-bold text-slate-700 dark:text-slate-300 mb-1.5 whitespace-nowrap overflow-hidden text-ellipsis">ค่าธรรมเนียม (THB)</label>
+             <div class="relative">
+               <input type="number" step="0.01" id="formFee" value="0" class="h-9 w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg pl-2.5 pr-7 text-[13px] font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none">
+               <div class="absolute inset-y-0 right-0 flex items-center pr-1.5 pointer-events-none text-slate-400">
+                  <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
+               </div>
+             </div>
+          </div>
+          <div class="flex-1 min-w-0">
+             <label class="flex items-center gap-1.5 text-[12px] font-bold text-slate-700 dark:text-slate-300 mb-1.5 whitespace-nowrap overflow-hidden text-ellipsis">
+               <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>
+               หมายเหตุ
+             </label>
+             <input type="text" id="formNote" placeholder="เช่น โปรโมชั่นเรทพิเศษ" class="h-9 w-full min-w-0 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-2.5 text-[13px] text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none">
+          </div>
+        </div>
+
+
+        <div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-700/50 mt-2">
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="closeModal()" class="px-4 py-2 text-[13px] font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">ยกเลิก</button>
+            <button type="button" id="btnDeleteTx" onclick="deleteCurrentTx()" class="hidden px-3 py-2 text-[13px] font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-lg flex items-center gap-1.5 transition">
+              <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+              ลบ
+            </button>
+          </div>
+          <button type="submit" class="px-4 py-2 text-[13px] bg-[#059669] hover:bg-emerald-700 text-white rounded-lg font-bold shadow-sm flex items-center gap-1.5">
+            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            บันทึก
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- Popup Modal Window for Add Bucket -->
+  <div id="bucketModalOverlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs hidden flex items-center justify-center p-3 sm:p-4 z-50">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full p-0 overflow-hidden border border-slate-100 dark:border-slate-700/50">
+      <div class="bg-slate-900 text-white px-3.5 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30 font-bold text-sm shrink-0">
+            <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"/></svg>
+          </div>
+          <div>
+            <h3 class="font-bold text-xs sm:text-sm text-white">เพิ่มชุดข้อมูลใหม่ (Bucket)</h3>
+            <p class="text-[10px] text-slate-400">สร้างแฟ้มใหม่เพื่อแยกการบันทึกประวัติการแลกเงิน</p>
+          </div>
+        </div>
+        <button onclick="closeBucketModal()" class="text-slate-400 hover:text-white p-1 rounded-md hover:bg-slate-800 transition">
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+
+      <form id="bucketForm" onsubmit="handleBucketSubmit(event)" class="p-4 sm:p-5 space-y-4">
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">ชื่อบัญชี</label>
+          <input type="text" id="bucketName" required placeholder="เช่น SCB, KBank" class="h-9 w-full bg-slate-100 dark:bg-slate-700 border-0 rounded-lg px-2.5 text-xs font-bold text-slate-900 dark:text-slate-50 focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">สีสัญลักษณ์</label>
+          <input type="color" id="bucketColor" required value="#3b82f6" class="h-9 w-full bg-slate-100 dark:bg-slate-700 border-0 rounded-lg px-2.5 text-xs focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer">
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">รายละเอียด (ไม่บังคับ)</label>
+          <input type="text" id="bucketDesc" placeholder="คำอธิบายเพิ่มเติม" class="h-9 w-full bg-slate-100 dark:bg-slate-700 border-0 rounded-lg px-2.5 text-xs text-slate-900 dark:text-slate-50 focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-700/50 mt-2">
+          <button type="button" onclick="closeBucketModal()" class="px-4 h-9 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg">ยกเลิก</button>
+          <button type="submit" class="px-4 h-9 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-sm">บันทึก</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    let currentUserEmail = localStorage.getItem('user_email') || null;
+
+    let state = {
+      buckets: [
+        { id: 'bucket_paotang', name: 'USD เป๋าตัง', color: '#3b82f6' },
+        { id: 'bucket_dime', name: 'USD Dime', color: '#10b981' }
+      ],
+      transactions: [],
+      currentBucket: 'bucket_paotang',
+      liveRate: 33.5256,
+      sheetUrl: '#',
+      editingTxId: null
+    };
+
+
+    
+    function parseJwt(token) {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+      } catch(e) { return null; }
+    }
+
+    const ALLOWED_EMAIL = 'wisut.pond@gmail.com';
+
+    function handleCredentialResponse(response) {
+      const payload = parseJwt(response.credential);
+      if (payload && payload.email) {
+        if (payload.email === ALLOWED_EMAIL) {
+          currentUserEmail = payload.email;
+          localStorage.setItem('user_email', currentUserEmail);
+          document.getElementById('userEmailDisplay').innerText = currentUserEmail;
+          showMainApp();
+          initApp();
+        } else {
+          alert('เข้าสู่ระบบล้มเหลว: บัญชีของคุณ (' + payload.email + ') ไม่ได้รับอนุญาตให้ใช้งานระบบนี้');
+          handleSignOut();
+        }
+      }
+    }
+
+    function handleSignOut() {
+    window.location.href = 'index.html';
+}
+
+    function showMainApp() {
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('mainApp').classList.remove('hidden');
+      document.getElementById('mainApp').classList.add('flex');
+    }
+
+    window.onload = function() {
+    const token = localStorage.getItem('pond_ai_token');
+    if (!token) {
+        window.location.href = 'index.html';
+        return;
+    }
+    currentUserEmail = 'wisut.pond@gmail.com';
+    document.getElementById('userEmailDisplay').innerText = currentUserEmail;
+    showMainApp();
+    initApp();
+};
+
+    
+    
+    const SPREADSHEET_ID = '1FLWvoQiFu2p0w5bKjIG9Nfd_i67S0p_dn0Ylww-P7hM';
+    let cachedSheetMetadata = null;
+
+    async function getSheetId(sheetName) {
+        if (!cachedSheetMetadata) {
+            const token = localStorage.getItem('pond_ai_token');
+            const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            cachedSheetMetadata = await res.json();
+        }
+        const sheet = cachedSheetMetadata.sheets.find(s => s.properties.title === sheetName);
+        return sheet ? sheet.properties.sheetId : null;
+    }
+
+    async function sheetsApiGet(range) {
+        const token = localStorage.getItem('pond_ai_token');
+        const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        return data.values || [];
+    }
+
+    async function sheetsApiAppend(range, values) {
+        const token = localStorage.getItem('pond_ai_token');
+        const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}:append?valueInputOption=USER_ENTERED`, {
+            method: 'POST',
+            headers: { 
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ values: [values] })
+        });
+        return await res.json();
+    }
+
+    async function sheetsApiUpdate(range, values) {
+        const token = localStorage.getItem('pond_ai_token');
+        const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`, {
+            method: 'PUT',
+            headers: { 
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ values: [values] })
+        });
+        return await res.json();
+    }
+
+    async function sheetsApiBatchUpdate(requests) {
+        const token = localStorage.getItem('pond_ai_token');
+        const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}:batchUpdate`, {
+            method: 'POST',
+            headers: { 
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ requests })
+        });
+        return await res.json();
+    }
+
+    async function gasFetch(action, payload = {}) {
+        try {
+            if (action === 'getInitialData') {
+                const bucketsData = await sheetsApiGet('Buckets!A2:F');
+                let buckets = bucketsData.map(row => ({
+                    id: String(row[0] || ''),
+                    name: String(row[1] || ''),
+                    isDefault: row[2] === 'TRUE' || row[2] === true,
+                    color: String(row[3] || '#3B82F6'),
+                    description: String(row[4] || ''),
+                    createdAt: Number(row[5]) || Date.now()
+                })).filter(b => b.id && b.name);
+
+                if (buckets.length === 0) {
+                    buckets = [
+                        { id: 'bucket_paotang', name: 'USD เป๋าตัง', isDefault: true, color: '#2563EB', description: 'บัญชีแลกเงินดอลลาร์ผ่านแอปเป๋าตัง', createdAt: Date.now() },
+                        { id: 'bucket_dime', name: 'USD Dime', isDefault: true, color: '#059669', description: 'บัญชีลงทุนและแลกเงินผ่านแอป Dime!', createdAt: Date.now() }
+                    ];
+                }
+
+                const txData = await sheetsApiGet('Transactions!A2:L');
+                const transactions = txData.map(row => ({
+                    id: String(row[0] || ''),
+                    date: String(row[1] || ''),
+                    time: String(row[2] || ''),
+                    bucketId: String(row[3] || ''),
+                    bucketName: String(row[4] || ''),
+                    thbAmount: Number(row[5]) || 0,
+                    usdAmount: Number(row[6]) || 0,
+                    rate: Number(row[7]) || 0,
+                    feeThb: Number(row[8]) || 0,
+                    feeUsd: Number(row[9]) || 0,
+                    note: String(row[10] || ''),
+                    createdAt: Number(row[11]) || Date.now()
+                })).filter(tx => tx.id && tx.date);
+
+                return { success: true, userEmail: 'wisut.pond@gmail.com', buckets, transactions };
+            } 
+            
+            else if (action === 'getGoogleFinanceRate') {
+                const rateData = await sheetsApiGet('Transactions!M2:M2');
+                const rawRate = rateData[0] ? String(rateData[0][0]).replace(/[^0-9.]/g, "") : "0"; const rate = Number(rawRate);
+                return { success: true, rate: rate > 0 ? rate : 36.5 };
+            }
+
+            else if (action === 'addTransaction') {
+                await sheetsApiAppend('Transactions!A:L', [
+                    payload.id, payload.date, payload.time, payload.bucketId, payload.bucketName,
+                    payload.thbAmount, payload.usdAmount, payload.rate, payload.feeThb || 0, payload.feeUsd || 0,
+                    payload.note || '', payload.createdAt || Date.now()
+                ]);
+                return { success: true };
+            }
+
+            else if (action === 'editTransaction') {
+                const txData = await sheetsApiGet('Transactions!A:A');
+                // Row 1 is header, index 0. If tx is on Row 2, its index is 1.
+                const rowIndex = txData.findIndex(row => String(row[0]) === String(payload.id));
+                if (rowIndex >= 0) {
+                    await sheetsApiUpdate(`Transactions!A${rowIndex + 1}:L${rowIndex + 1}`, [
+                        payload.id, payload.date, payload.time, payload.bucketId, payload.bucketName,
+                        payload.thbAmount, payload.usdAmount, payload.rate, payload.feeThb || 0, payload.feeUsd || 0,
+                        payload.note || '', payload.createdAt || Date.now()
+                    ]);
+                    return { success: true };
+                }
+                return { success: false, error: 'Transaction not found' };
+            }
+
+            else if (action === 'deleteTransaction') {
+                const txData = await sheetsApiGet('Transactions!A:A');
+                const rowIndex = txData.findIndex(row => String(row[0]) === String(payload.id));
+                if (rowIndex >= 0) {
+                    const sheetId = await getSheetId('Transactions');
+                    await sheetsApiBatchUpdate([{
+                        deleteDimension: {
+                            range: { sheetId: sheetId, dimension: 'ROWS', startIndex: rowIndex, endIndex: rowIndex + 1 }
+                        }
+                    }]);
+                    return { success: true };
+                }
+                return { success: false, error: 'Transaction not found' };
+            }
+
+            else if (action === 'addBucket') {
+                await sheetsApiAppend('Buckets!A:F', [
+                    payload.id, payload.name, payload.isDefault || false, payload.color || '#2563EB',
+                    payload.description || '', payload.createdAt || Date.now()
+                ]);
+                return { success: true };
+            }
+
+            else if (action === 'deleteBucket') {
+                const bucketData = await sheetsApiGet('Buckets!A:A');
+                const rowIndex = bucketData.findIndex(row => String(row[0]) === String(payload.id));
+                if (rowIndex >= 0) {
+                    const sheetId = await getSheetId('Buckets');
+                    const requests = [{
+                        deleteDimension: {
+                            range: { sheetId: sheetId, dimension: 'ROWS', startIndex: rowIndex, endIndex: rowIndex + 1 }
+                        }
+                    }];
+
+                    // Also delete associated transactions
+                    const txData = await sheetsApiGet('Transactions!D:D');
+                    const txSheetId = await getSheetId('Transactions');
+                    
+                    // We must delete from bottom up to avoid index shifting
+                    let rowsToDelete = [];
+                    txData.forEach((row, i) => {
+                        if (String(row[0]) === String(payload.id)) rowsToDelete.push(i);
+                    });
+                    
+                    rowsToDelete.sort((a, b) => b - a).forEach(i => {
+                        requests.push({
+                            deleteDimension: {
+                                range: { sheetId: txSheetId, dimension: 'ROWS', startIndex: i, endIndex: i + 1 }
+                            }
+                        });
+                    });
+
+                    await sheetsApiBatchUpdate(requests);
+                    return { success: true };
+                }
+                return { success: false, error: 'Bucket not found' };
+            }
+
+            return { success: false, error: 'Unknown action: ' + action };
+
+        } catch (err) {
+            console.error('Sheets API Error:', err);
+            return { success: false, error: err.toString() };
+        }
+    }
+
+
+    function initApp() {
+      // Set default date & time in modal
+      const now = new Date();
+      document.getElementById('formDate').value = now.toISOString().split('T')[0];
+      document.getElementById('formTime').value = now.toTimeString().substring(0, 5);
+      
+      // Load from GAS API
+      gasFetch('getInitialData').then(res => onDataLoaded(res));
+      gasFetch('getGoogleFinanceRate').then(res => onRateLoaded(res));
+    }
+    function onDataLoaded(res) {
+      if (res && res.success) {
+        if (res.buckets && res.buckets.length) state.buckets = res.buckets;
+        if (res.transactions) state.transactions = res.transactions;
+        if (res.sheetUrl) {
+          state.sheetUrl = res.sheetUrl;
+          const btn = document.getElementById('sheetLinkBtn');
+          if (btn) btn.href = res.sheetUrl;
+        }
+      }
+      render();
+    }
+
+
+    function onRateLoaded(res) {
+      if (res && res.rate) {
+        state.liveRate = Number(res.rate);
+        document.getElementById('liveRateDisplay').innerText = '1 USD = ' + state.liveRate.toFixed(4) + ' THB';
+        render();
+      }
+    }
+
+    
+    async function refreshRate() {
+      const res = await gasFetch('getGoogleFinanceRate');
+      onRateLoaded(res);
+    }
+
+    function selectBucket(bucketId) {
+      state.currentBucket = bucketId;
+      render();
+    }
+
+    function setTheme(theme) {
+      const btnAuto = document.getElementById('btnThemeAuto');
+      const btnLight = document.getElementById('btnThemeLight');
+      const btnDark = document.getElementById('btnThemeDark');
+      
+      const activeClass = 'text-emerald-600 bg-emerald-50/50 dark:bg-emerald-500/20 dark:text-emerald-400';
+      const inactiveClass = 'text-slate-400 hover:text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 dark:hover:text-slate-300';
+      
+      btnAuto.className = `p-1.5 rounded-lg text-xs transition flex items-center justify-center cursor-pointer ${theme === 'auto' ? activeClass : inactiveClass}`;
+      btnLight.className = `p-1.5 rounded-lg text-xs transition flex items-center justify-center cursor-pointer ${theme === 'light' ? activeClass : inactiveClass}`;
+      btnDark.className = `p-1.5 rounded-lg text-xs transition flex items-center justify-center cursor-pointer ${theme === 'dark' ? activeClass : inactiveClass}`;
+      
+      try {
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+          localStorage.setItem('theme', 'dark');
+        } else if (theme === 'light') {
+          document.documentElement.classList.remove('dark');
+          localStorage.setItem('theme', 'light');
+        } else {
+          localStorage.removeItem('theme');
+          if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        }
+      } catch (e) {
+        // Ignore localStorage errors in sandboxed iframes
+      }
+    }
+
+    // Initialize theme on load
+    try {
+      if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+        setTheme('dark');
+      } else if (localStorage.theme === 'light') {
+        document.documentElement.classList.remove('dark');
+        setTheme('light');
+      } else {
+        setTheme('auto');
+      }
+    } catch (e) {
+      setTheme('light'); // Fallback if localStorage is blocked
+    }
+    function populateBucketSelect() {
+      const select = document.getElementById("formBucket");
+      if (!select) return;
+      let html = "";
+      state.buckets.forEach(b => {
+        html += `<option value="${b.id}">${b.name}</option>`;
+      });
+      select.innerHTML = html;
+    }
+    function render() {
+      renderBucketTabs();
+      renderSummary();
+      renderTransactionsTable();
+      populateBucketSelect();
+    }
+    function renderBucketTabs() {
+      const container = document.getElementById('bucketTabs');
+      
+      let html = '';
+      
+      state.buckets.forEach(b => {
+        const isActive = state.currentBucket === b.id;
+        html += `<div class="relative group flex items-center">
+          <button onclick="selectBucket('${b.id}')" class="px-2.5 py-1.5 rounded-[8px] text-[13px] font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${isActive ? 'bg-[#059669] text-white shadow-sm' : 'text-slate-700 hover:text-slate-900 hover:bg-slate-50'}">
+            <span class="w-[9px] h-[9px] rounded-full shrink-0 ${isActive ? 'ring-2 ring-white/30' : ''}" style="background-color: ${b.color};"></span>
+            <span>${b.name}</span>
+          </button>
+          ${!b.isDefault ? `<button onclick="deleteBucketGAS('${b.id}')" class="hidden group-hover:flex ml-1 p-0.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition" title="ลบชุดข้อมูลนี้"><svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg></button>` : ''}
+        </div>`;
+      });
+      container.innerHTML = html;
+    }
+
+
+    function filteredTransactions() {
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      try {
+        const d = new Date(dateStr);
+        if (!isNaN(d.getTime())) {
+          return d.toISOString().split('T')[0];
+        }
+      } catch(e) {}
+      return dateStr;
+    }
+      let filtered = [...state.transactions];
+      if (state.currentBucket && state.currentBucket !== 'all') {
+        filtered = filtered.filter(t => t.bucketId === state.currentBucket);
+      }
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput && searchInput.value) {
+        const q = searchInput.value.toLowerCase();
+        filtered = filtered.filter(t => {
+          return (t.bucketName && t.bucketName.toLowerCase().includes(q)) ||
+                 (t.date && t.date.includes(q)) ||
+                 (t.note && t.note.toLowerCase().includes(q)) ||
+                 (t.thbAmount && t.thbAmount.toString().includes(q)) ||
+                 (t.usdAmount && t.usdAmount.toString().includes(q));
+        });
+      }
+      
+      const sortInput = document.getElementById('sortInput');
+      const sortOrder = sortInput ? sortInput.value : 'newest';
+      
+      filtered.sort((a, b) => {
+        if (sortOrder === 'newest') return new Date(b.date).getTime() - new Date(a.date).getTime();
+        if (sortOrder === 'oldest') return new Date(a.date).getTime() - new Date(b.date).getTime();
+        if (sortOrder === 'highest_thb') return Number(b.thbAmount) - Number(a.thbAmount);
+        return 0;
+      });
+      
+      return filtered;
+    }
+
+
+    function renderSummary() {
+      const txs = filteredTransactions();
+      let totalThb = 0, totalUsd = 0;
+      txs.forEach(t => {
+        totalThb += Number(t.thbAmount || 0);
+        totalUsd += Number(t.usdAmount || 0);
+      });
+
+      const avgRate = totalUsd > 0 ? (totalThb / totalUsd) : 0;
+      const currentThbVal = totalUsd * state.liveRate;
+      const profitLoss = currentThbVal - totalThb;
+      const profitPercent = totalThb > 0 ? (profitLoss / totalThb) * 100 : 0;
+
+      document.getElementById('statTotalThb').innerText = '฿' + totalThb.toLocaleString('th-TH', { minimumFractionDigits: 2 });
+      document.getElementById('statTotalUsd').innerText = '$' + totalUsd.toLocaleString('en-US', { minimumFractionDigits: 2 });
+      document.getElementById('statAvgRate').innerText = avgRate > 0 ? avgRate.toFixed(4) : '0.00';
+      
+      const usdValueElem = document.getElementById('statUsdValueThb');
+      if (usdValueElem) {
+        usdValueElem.innerText = '≈ ฿' + currentThbVal.toLocaleString('th-TH', { minimumFractionDigits: 2 });
+      }
+      
+      const plElem = document.getElementById('statProfitLoss');
+      if (plElem) {
+        if (profitLoss >= 0) {
+          plElem.className = 'text-[11px] font-semibold text-emerald-600 leading-normal';
+          plElem.innerText = `+ส่วนต่าง ฿${profitLoss.toLocaleString('th-TH', { minimumFractionDigits: 2 })} (+${profitPercent.toFixed(2)}%)`;
+        } else {
+          plElem.className = 'text-[11px] font-semibold text-rose-600 leading-normal';
+          plElem.innerText = `ส่วนต่าง -฿${Math.abs(profitLoss).toLocaleString('th-TH', { minimumFractionDigits: 2 })} (${profitPercent.toFixed(2)}%)`;
+        }
+      }
+    }
+
+
+    function renderTransactionsTable() {
+    function formatTimeShort(timeStr) {
+      if (!timeStr) return '';
+      try {
+        const d = new Date(timeStr);
+        if (!isNaN(d.getTime())) {
+          const h = String(d.getHours()).padStart(2, '0');
+          const m = String(d.getMinutes()).padStart(2, '0');
+          return `${h}:${m}`;
+        }
+      } catch(e) {}
+      if (typeof timeStr === 'string' && timeStr.length > 5) {
+        return timeStr.substring(0, 5);
+      }
+      return timeStr;
+    }
+    function formatDateShort(dateStr) {
+      if (!dateStr) return '';
+      try {
+        const d = new Date(dateStr);
+        if (!isNaN(d.getTime())) {
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          return `${y}-${m}-${day}`;
+        }
+      } catch(e) {}
+      return String(dateStr).substring(0, 10);
+    }
+      const txs = filteredTransactions();
+      document.getElementById('txCountBadge').innerText = `${txs.length} รายการ`;
+      const tbody = document.getElementById('txTableBody');
+      const mobileList = document.getElementById('txMobileList');
+      
+      if (txs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-slate-400 space-y-1.5"><p class="text-xs">ยังไม่มีรายการบันทึกการแลกเงิน</p><button onclick="openModal()" class="text-xs text-emerald-600 font-bold hover:underline">คลิกเพื่อบันทึกรายการแรก</button></td></tr>`;
+        mobileList.innerHTML = `<div class="p-6 text-center text-slate-400 dark:text-slate-500 space-y-1.5"><p class="text-xs">ยังไม่มีรายการบันทึกการแลกเงิน</p></div>`;
+        return;
+      }
+
+      let html = '';
+      let mobileHtml = '';
+      txs.forEach(t => {
+        let bColor = '#2563EB';
+        const found = state.buckets.find(b => b.id === t.bucketId);
+        if(found) bColor = found.color;
+
+        // Desktop Row
+        html += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+          <td class="px-4 py-1.5 font-medium text-slate-900 dark:text-white whitespace-nowrap text-xs">
+            <div class="flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-slate-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+              <span>${formatDateShort(t.date)}</span>
+              <span class="text-[11px] text-slate-400 font-normal">${formatTimeShort(t.time)}</span>
+            </div>
+          </td>
+          <td class="px-4 py-1.5 whitespace-nowrap">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
+              <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${bColor}"></span>
+              <span>${t.bucketName}</span>
+            </span>
+              
+          </td>
+          <td class="px-4 py-1.5 text-right font-medium text-slate-900 dark:text-white whitespace-nowrap text-xs">฿${Number(t.thbAmount).toLocaleString('th-TH', {minimumFractionDigits:2})}</td>
+          <td class="px-4 py-1.5 text-right font-bold text-emerald-600 dark:text-emerald-400 font-mono whitespace-nowrap text-xs">$${Number(t.usdAmount).toLocaleString('en-US', {minimumFractionDigits:2})}</td>
+          <td class="px-4 py-1.5 text-right font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap text-xs">${Number(t.rate).toFixed(4)}</td>
+          <td class="px-4 py-1.5 text-xs text-slate-500 dark:text-slate-400 max-w-xs truncate">${t.note || '-'}</td>
+          <td class="px-4 py-1.5 text-center flex items-center justify-center gap-1">
+            <button onclick="editTx('${t.id}')" class="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition" title="แก้ไข">
+              <svg class="w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+            </button>
+          </td>
+        </tr>`;
+
+        // Mobile Card
+        mobileHtml += `
+          <div class="p-2 space-y-1 relative group">
+            <div class="flex items-center justify-between">
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200">
+                <span class="w-1.5 h-1.5 rounded-full" style="background-color: ${bColor}"></span>
+                <span>${t.bucketName}</span>
+              </span>
+              
+              
+            </div>
+            
+            <div class="flex items-baseline justify-between pt-0.5">
+              <div>
+                <span class="text-[10px] text-slate-400 dark:text-slate-500 block">จ่าย THB</span>
+                <span class="text-sm font-bold text-slate-900 dark:text-white font-mono">
+                  ฿${Number(t.thbAmount).toLocaleString('th-TH', {minimumFractionDigits:2})}
+                </span>
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] text-slate-400 dark:text-slate-500 block">ได้ USD (เรท ${Number(t.rate).toFixed(4)})</span>
+                <span class="text-sm font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                  $${Number(t.usdAmount).toLocaleString('en-US', {minimumFractionDigits:2})}
+                </span>
+              </div>
+            </div>
+            
+            ${t.note ? `<p class="text-[11px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/80 px-2 py-1 rounded-md">💬 ${t.note}</p>` : ''}
+            
+            <div class="flex items-center justify-end pt-1 border-t border-slate-100 dark:border-slate-800 text-[11px] font-medium gap-3">
+              <button onclick="editTx('${t.id}')" class="text-emerald-600 dark:text-emerald-400 font-semibold hover:underline flex items-center gap-1">
+                <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                <span>แก้ไข</span>
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
+      tbody.innerHTML = html;
+      mobileList.innerHTML = mobileHtml;
+    }
+
+
+    function openModal() {
+      if (!state.editingTxId) {
+        document.getElementById('formDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('formTime').value = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('formRate').value = state.liveRate.toFixed(4);
+        document.getElementById('formBucket').value = state.currentBucket === 'all' ? state.buckets[0].id : state.currentBucket;
+        document.getElementById('formThb').value = '';
+        document.getElementById('formUsd').value = '';
+        document.getElementById('formFee').value = '0';
+        document.getElementById('formNote').value = '';
+        document.getElementById('modalTitle').innerText = 'เพิ่มรายการแลกเงินใหม่';
+        document.getElementById('btnDeleteTx').classList.remove('flex');
+        document.getElementById('btnDeleteTx').classList.add('hidden');
+        updateEstReceive();
+      }
+      document.getElementById('modalOverlay').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      state.editingTxId = null;
+      document.getElementById('modalOverlay').classList.add('hidden');
+    }
+
+    function editTx(id) {
+      const tx = state.transactions.find(t => t.id === id);
+      if (!tx) return;
+      state.editingTxId = id;
+      document.getElementById('formBucket').value = tx.bucketId;
+      document.getElementById('formDate').value = tx.date;
+      document.getElementById('formTime').value = tx.time;
+      document.getElementById('formThb').value = tx.thbAmount;
+      document.getElementById('formUsd').value = tx.usdAmount;
+      document.getElementById('formRate').value = tx.rate;
+      document.getElementById('formFee').value = tx.feeThb || 0;
+      document.getElementById('formNote').value = tx.note || '';
+      document.getElementById('modalTitle').innerText = 'แก้ไขรายการแลกเงิน';
+      document.getElementById('btnDeleteTx').classList.remove('hidden');
+      document.getElementById('btnDeleteTx').classList.add('flex');
+      updateEstReceive();
+      document.getElementById('modalOverlay').classList.remove('hidden');
+    }
+
+
+    function updateEstReceive() {
+      const usd = parseFloat(document.getElementById('formUsd').value) || 0;
+      document.getElementById('formEstReceive').innerText = '$ ' + usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function calculateOnThbChange() {
+      const thb = parseFloat(document.getElementById('formThb').value) || 0;
+      const rate = parseFloat(document.getElementById('formRate').value) || state.liveRate;
+      if (thb > 0 && rate > 0) {
+        document.getElementById('formUsd').value = (thb / rate).toFixed(2);
+      } else if (thb === 0) {
+        document.getElementById('formUsd').value = '';
+      }
+      updateEstReceive();
+    }
+
+    function calculateOnRateChange() {
+      const thb = parseFloat(document.getElementById('formThb').value) || 0;
+      const rate = parseFloat(document.getElementById('formRate').value) || 0;
+      if (thb > 0 && rate > 0) {
+        document.getElementById('formUsd').value = (thb / rate).toFixed(2);
+      }
+      updateEstReceive();
+    }
+
+    function calculateOnUsdChange() {
+      const usd = parseFloat(document.getElementById('formUsd').value) || 0;
+      const rate = parseFloat(document.getElementById('formRate').value) || state.liveRate;
+      if (usd > 0 && rate > 0) {
+        document.getElementById('formThb').value = (usd * rate).toFixed(2);
+      } else if (usd === 0) {
+        document.getElementById('formThb').value = '';
+      }
+      updateEstReceive();
+    }
+
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const bucketId = document.getElementById('formBucket').value;
+      const bucketObj = state.buckets.find(b => b.id === bucketId) || state.buckets[0];
+      
+      const txData = {
+        date: document.getElementById('formDate').value,
+        time: document.getElementById('formTime').value,
+        bucketId: bucketObj.id,
+        bucketName: bucketObj.name,
+        thbAmount: parseFloat(document.getElementById('formThb').value) || 0,
+        usdAmount: parseFloat(document.getElementById('formUsd').value) || 0,
+        rate: parseFloat(document.getElementById('formRate').value) || 36.5,
+        feeThb: parseFloat(document.getElementById('formFee').value) || 0,
+        note: document.getElementById('formNote').value,
+      };
+
+
+      if (state.editingTxId) {
+        txData.id = state.editingTxId;
+        const idx = state.transactions.findIndex(t => t.id === state.editingTxId);
+        if (idx !== -1) {
+          txData.createdAt = state.transactions[idx].createdAt;
+          state.transactions[idx] = txData;
+        }
+        
+        gasFetch('editTransaction', txData);
+
+      } else {
+        txData.id = 'tx_' + Date.now();
+        txData.createdAt = Date.now();
+        state.transactions.unshift(txData);
+        
+        gasFetch('addTransaction', txData);
+
+      }
+
+      closeModal();
+      render();
+    }
+
+    function deleteCurrentTx() {
+      if (state.editingTxId) {
+        if (confirm('ยืนยันการลบรายการแลกเงินนี้?')) {
+          deleteTx(state.editingTxId);
+          closeModal();
+        }
+      }
+    }
+
+    function deleteTx(id) {
+      state.transactions = state.transactions.filter(t => t.id !== id);
+      render();
+      
+      gasFetch('deleteTransaction', { id });
+
+    }
+
+
+    function openBucketModal() {
+      document.getElementById('bucketName').value = '';
+      document.getElementById('bucketColor').value = '#3b82f6';
+      document.getElementById('bucketDesc').value = '';
+      document.getElementById('bucketModalOverlay').classList.remove('hidden');
+    }
+
+    function closeBucketModal() {
+      document.getElementById('bucketModalOverlay').classList.add('hidden');
+    }
+
+    function handleBucketSubmit(e) {
+      e.preventDefault();
+      const newBucket = {
+        id: 'bucket_' + Date.now(),
+        name: document.getElementById('bucketName').value,
+        color: document.getElementById('bucketColor').value,
+        description: document.getElementById('bucketDesc').value,
+        isDefault: false,
+        createdAt: Date.now()
+      };
+      
+      state.buckets.push(newBucket);
+      state.currentBucket = newBucket.id;
+      closeBucketModal();
+      render();
+
+      
+      gasFetch('addBucket', newBucket);
+
+    }
+
+    function deleteBucketGAS(id) {
+      if (confirm('คุณต้องการลบบัญชีนี้และรายการที่เกี่ยวข้องทั้งหมดหรือไม่?')) {
+        state.buckets = state.buckets.filter(b => b.id !== id);
+        state.transactions = state.transactions.filter(t => t.bucketId !== id);
+        if (state.currentBucket === id) {
+          state.currentBucket = 'all';
+        }
+        render();
+        
+        gasFetch('deleteBucket', { id });
+
+      }
+    }
+  </script>
+</div>
+
+
+
+<style id="ios-zoom-fix">
+/* Prevent iOS Safari from zooming in on input fields */
+@media screen and (max-width: 768px) {
+    input[type="text"], input[type="number"], input[type="date"], input[type="email"], input[type="password"], input[type="tel"], select, textarea {
+        font-size: 16px !important;
+    }
+}
+</style>
+
+
+
+<style id="page-enter-anim">
+@keyframes pageEnter {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+html { background: #fff; }
+body {
+  opacity: 0;
+  animation: pageEnter 0.25s ease 0.05s forwards;
+}
+</style>
+
+<style id="hide-logout-style">
+/* Hide logout buttons */
+[title*="ออกจากระบบ"], #logout-button, #logoutBtn, button:has(svg.lucide-log-out) { display: none !important; }
+</style>
+</body>
+</html>

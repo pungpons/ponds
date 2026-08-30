@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-slate-50 dark:bg-[#0f172a]">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)" id="theme-color-meta-light">
+    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" id="theme-color-meta-dark">
+    <meta name="theme-color" content="#f8fafc" id="theme-color-meta">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <title>POND</title>
+    
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    transitionTimingFunction: {
+                        'apple': 'cubic-bezier(0.16, 1, 0.3, 1)',
+                    },
+                    colors: {
+                        ios: {
+                            text: '#000000',
+                            darkText: '#ffffff',
+                            blue: '#007aff',
+                            darkBlue: '#0a84ff',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+
+    <script>
+        (function() {
+            try {
+                var theme = localStorage.getItem('theme');
+                var isDark = theme === 'dark' || (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches) || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                if (isDark) {
+                    document.documentElement.classList.add('dark');
+                    document.querySelectorAll('meta[name="theme-color"]').forEach(function(m) { m.setAttribute('content', '#0f172a'); });
+                }
+            } catch (e) {}
+        })();
+    </script>
+    <script src="gas_backend.js"></script>
+</head>
+<body class="h-[100dvh] flex flex-col font-sans bg-slate-50 text-slate-900 dark:bg-[#0f172a] dark:text-white relative overflow-hidden">
+    
+    <!-- Dynamic Blobs for Background -->
+  <div class="fixed w-[200vw] h-[200vh] -left-[50vw] -top-[50vh] pointer-events-none z-0 transition-opacity duration-500 dark:opacity-0 blob-animate" style="background: radial-gradient(circle at 30% 40%, rgba(79, 70, 229, 0.15) 0%, transparent 40%), radial-gradient(circle at 70% 60%, rgba(244, 63, 94, 0.15) 0%, transparent 40%), radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);"></div>
+  <div class="fixed w-[200vw] h-[200vh] -left-[50vw] -top-[50vh] pointer-events-none z-0 transition-opacity duration-500 opacity-0 dark:opacity-100 blob-animate" style="background: radial-gradient(circle at 30% 40%, rgba(79, 70, 229, 0.4) 0%, transparent 40%), radial-gradient(circle at 70% 60%, rgba(244, 63, 94, 0.4) 0%, transparent 40%), radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.3) 0%, transparent 50%);"></div>
+  <!-- Vignette Gradient Overlay -->
+  <div class="fixed inset-0 pointer-events-none z-0 transition-colors duration-500 bg-[radial-gradient(ellipse_at_center,transparent_0%,#f8fafc_100%)] dark:bg-[radial-gradient(ellipse_at_center,transparent_0%,#0f172a_100%)]"></div>
+
+    <!-- Lock Screen Overlay -->
+    <div id="lockScreen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#f4f5f7]/80 dark:bg-[#101014]/80 backdrop-blur-md transition-opacity duration-300">
+        <div class="backdrop-blur-xl bg-white/70 dark:bg-white/5 p-8 rounded-3xl shadow-xl dark:shadow-2xl w-full max-w-md text-center border border-black/5 dark:border-white/10 transition-colors duration-500">
+          <div class="w-auto px-6 h-24 rounded-[28%] bg-gradient-to-r from-blue-700 to-indigo-800 mx-auto mb-6 flex items-center justify-center text-white text-5xl font-bold tracking-wider shadow-xl shadow-indigo-900/30 inline-flex">POND</div>
+          <h2 class="text-2xl font-bold mb-2 text-gray-900 dark:text-white">Welcome</h2>
+          <p class="text-slate-500 dark:text-white/60 mb-8 text-sm">Paste your Google Apps Script (GAS) Web App URL to connect your backend.</p>
+          
+          <!-- GAS URL Input -->
+          <form id="gas-setup-form" class="flex flex-col gap-4">
+              <input type="url" id="gas-url-input" required placeholder="https://script.google.com/macros/s/.../exec" class="w-full px-4 py-3 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 placeholder-slate-400 dark:placeholder-white/30 focus:bg-white dark:focus:bg-white/10 focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-sm text-left dark:text-white">
+              <button type="submit" class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-lg shadow-indigo-500/30 transition-all active:scale-[0.98]">
+                  Connect Backend
+              </button>
+          </form>
+          <p id="loginErrorMsg" class="text-red-500 text-sm mt-4 hidden"></p>
+        </div>
+    </div>
+
+    <!-- Sticky Header -->
+    <header class="flex justify-between items-center px-6 pt-safe-top pb-4 mt-6 z-50">
+        <div class="bg-gradient-to-br from-blue-600 to-indigo-700 dark:from-[#1e3a8a] dark:to-[#312e81] text-white font-bold text-lg px-6 py-2.5 rounded-xl shadow-[0_8px_16px_rgb(59_130_246/0.3)] dark:shadow-[0_8px_16px_rgb(0_0_0/0.4)] tracking-wider transition-colors duration-500 ease-apple cursor-pointer active:scale-95" onclick="window.location.reload()">
+            POND
+        </div>
+        <div class="flex items-center gap-3">
+            
+            <!-- Theme Toggle -->
+            <button id="themeToggle" class="w-10 h-10 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 text-ios-text dark:text-ios-darkText backdrop-blur-md transition-all duration-500 ease-apple active:scale-90 active:opacity-70 hover:scale-105" title="Toggle Theme">
+                <svg id="themeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+            <!-- Sign Out -->
+            <div id="authButtonContainer">
+                <button id="loginBtn" class="w-10 h-10 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 text-ios-text dark:text-ios-darkText backdrop-blur-md transition-all duration-500 ease-apple active:scale-90 active:opacity-70 hover:scale-105 hidden" title="Sign Out">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Scrollable Main Container -->
+    <main class="flex-1 overflow-y-auto pb-safe-bottom mt-4">
+        <div class="px-6 py-4">
+            <!-- Apps Grid -->
+            <div id="appsGrid" class="grid grid-cols-4 gap-x-4 gap-y-8 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8">
+                <!-- Items will be generated by JS -->
+            </div>
+        </div>
+    </main>
+
+  <!-- Edit Modal Overlay -->
+  <div id="app-modal" class="fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-md z-[200] hidden items-center justify-center p-4 transition-colors duration-500">
+    <div class="backdrop-blur-xl bg-white/90 dark:bg-[#0f172a]/90 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all border border-black/10 dark:border-white/10">
+      <div class="p-6">
+        <div class="flex justify-between items-center mb-6">
+          <h3 id="modal-title" class="text-xl font-bold tracking-tight">Edit App</h3>
+          <button id="close-modal-btn" class="text-slate-500 hover:text-slate-800 dark:text-white/40 dark:hover:text-white transition-colors bg-black/5 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10 p-2 rounded-full">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        
+        <form id="app-form" class="space-y-5">
+          <input type="hidden" id="app-id">
+          
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-white/50 mb-2">App Name</label>
+            <input type="text" id="app-name" required class="w-full px-4 py-2.5 rounded-xl border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 placeholder-slate-400 dark:placeholder-white/30 focus:bg-white dark:focus:bg-white/10 focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-white/50 mb-2">App Icon Image (Optional)</label>
+            <div class="flex items-center gap-4">
+              <div id="icon-preview" class="w-14 h-14 rounded-[22%] bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+                <span id="icon-preview-text" class="text-2xl">?</span>
+              </div>
+              <div class="flex-1 flex flex-col gap-2">
+                <label for="icon-upload" class="cursor-pointer text-sm font-medium bg-indigo-50 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 py-1.5 px-3 rounded-lg text-center hover:bg-indigo-100 dark:hover:bg-indigo-500/30 transition-colors">
+                  Upload Image
+                </label>
+                <input type="file" id="icon-upload" accept="image/*" class="hidden">
+                <button type="button" id="remove-icon-btn" class="text-xs text-red-500 hover:text-red-600 dark:text-red-400 hidden transition-colors">Remove Custom Image</button>
+              </div>
+            </div>
+            <input type="hidden" id="custom-icon-base64">
+          </div>
+
+          
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-white/50 mb-2">Color Customization</label>
+            <div id="color-selectors" class="flex gap-2 flex-wrap max-h-36 overflow-y-auto p-1 rounded-xl bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+          
+          <div class="pt-2">
+            <button type="submit" class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-lg shadow-indigo-500/30 transition-all active:scale-[0.98]">
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+<script src="app.js?v=1788066422"></script>
+</body>
+</html>

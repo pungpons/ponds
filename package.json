@@ -1,0 +1,8 @@
+{
+  "name": "ponds",
+  "version": "1.0.0",
+  "description": "PONDs Web App with GAS Backend",
+  "dependencies": {
+    "jsdom": "^30.0.1"
+  }
+}

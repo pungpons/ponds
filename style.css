@@ -1,0 +1,178 @@
+
+/* Completely disable iOS Safari rubber banding, text selection, and native drag artifacts */
+html, body {
+    overscroll-behavior: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+/* Apple Typography */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+/* iOS Safe Area Support */
+.pt-safe-top {
+    padding-top: env(safe-area-inset-top);
+}
+.pb-safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Hide Scrollbar for cleaner UI */
+::-webkit-scrollbar {
+    display: none;
+}
+* {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* 
+    CRUCIAL iOS SAFARI FIX:
+    Do NOT use `transition: background-color` on html/body.
+    They must snap instantly so we can force the theme-color meta tag to sync.
+*/
+html, body {
+    transition: none !important;
+}
+
+/* Blob Animation */
+@keyframes blob {
+    0% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(30px, -50px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.9); }
+    100% { transform: translate(0px, 0px) scale(1); }
+}
+
+.animate-blob {
+    animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+    animation-delay: 2s;
+}
+
+/* iOS Jiggle Edit Mode Animation */
+@keyframes jiggle {
+    0% { transform: rotate(-1.5deg) scale(1); }
+    50% { transform: rotate(1.5deg) scale(1.02); }
+    100% { transform: rotate(-1.5deg) scale(1); }
+}
+
+.jiggle {
+    animation: jiggle 0.25s infinite ease-in-out;
+}
+
+/* SortableJS Ghost/Drag Styles */
+.sortable-ghost { opacity: 0 !important; visibility: hidden; }
+.sortable-drag { cursor: grabbing !important; }
+
+/* 3D App Icon Effects */
+.app-icon-3d {
+    
+    box-shadow: 
+        0 10px 15px -3px rgba(0, 0, 0, 0.1), 
+        0 4px 6px -2px rgba(0, 0, 0, 0.05), 
+        inset 0 2px 4px rgba(255, 255, 255, 0.4), 
+        inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.dark .app-icon-3d {
+    box-shadow: 
+        0 10px 15px -3px rgba(0, 0, 0, 0.4), 
+        0 4px 6px -2px rgba(0, 0, 0, 0.2), 
+        inset 0 2px 4px rgba(255, 255, 255, 0.15), 
+        inset 0 -2px 4px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Edit Badge and Animations */
+.edit-badge { 
+    opacity: 0; 
+    transform: scale(0.8); 
+    pointer-events: none; 
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); 
+    z-index: 10; 
+}
+.edit-mode .edit-badge { 
+    opacity: 1; 
+    transform: scale(1); 
+    pointer-events: auto; 
+}
+.edit-mode .app-icon { 
+    animation: jiggle 0.3s infinite alternate; 
+}
+.edit-mode .app-icon:nth-child(even) { 
+    animation-delay: 0.15s; 
+    animation-direction: alternate-reverse; 
+}
+
+@keyframes blob { 
+    0% { transform: translate(0px, 0px) scale(1); } 
+    33% { transform: translate(30px, -50px) scale(1.1); } 
+    66% { transform: translate(-20px, 20px) scale(0.9); } 
+    100% { transform: translate(0px, 0px) scale(1); } 
+}
+.blob-animate { 
+    animation: blob 20s infinite ease-in-out; 
+}
+
+/* Hide the edit badge on the cloned dragged element */
+.sortable-drag .edit-badge {
+    display: none !important;
+}
+
+.sortable-drag {
+    background: transparent !important;
+    
+    cursor: grabbing !important;
+}
+.sortable-drag .app-icon-3d {
+    transform: scale(1.1);
+    box-shadow: 0 20px 30px -5px rgba(0, 0, 0, 0.4), 0 10px 15px -6px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Completely disable Safari native drag image capture */
+.app-icon, .app-icon * {
+    -webkit-user-drag: none !important;
+}
+
+/* ===== iOS Unlock-Style Page Animations ===== */
+
+/* 1. Full page: starts slightly zoomed in & transparent — zooms to normal (like Face ID unlock) */
+@keyframes unlockZoom {
+    0%   { opacity: 0; transform: scale(1.12); filter: blur(8px); }
+    60%  { opacity: 1; filter: blur(0px); }
+    100% { opacity: 1; transform: scale(1); filter: blur(0px); }
+}
+
+/* 2. Header slides down from above */
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-24px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 3. Each app icon blooms up from slightly below with spring */
+@keyframes iconBloom {
+    0%   { opacity: 0; transform: scale(0.4) translateY(20px); }
+    70%  { transform: scale(1.06) translateY(-3px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Apply unlock zoom to the whole main content */
+main {
+    animation: unlockZoom 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Header appears from top */
+header {
+    animation: slideDown 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.05s both;
+}
+
+/* App icons bloom in with stagger — set via JS using --bloom-delay */
+.app-icon.animate-bloom {
+    /* Use 'backwards' instead of 'both' so it doesn't lock the transform property after it finishes */
+    animation: iconBloom 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) var(--bloom-delay, 0.1s) backwards;
+}

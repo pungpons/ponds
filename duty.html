@@ -1,0 +1,2007 @@
+<!DOCTYPE html>
+<html lang="th" class="">
+<head>
+
+
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Duty Roster</title>
+  <!-- Google Fonts for premium Thai & English typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Vue 3 CDN (production build) -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  
+  <!-- html-to-image for local calendar image exporting (better flexbox support than html2canvas) -->
+  <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Prompt', 'Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    [v-cloak] { display: none !important; }
+    /* Custom scrollbars and styling tweaks */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    
+    /* Fix html-to-image artifacts (gray shadows on rounded borders) during export */
+    .export-mode, .export-mode * {
+      box-shadow: none !important;
+      text-shadow: none !important;
+    }
+    .export-mode .grid > div {
+      border-color: #ffffff !important;
+    }
+    .dark .export-mode .grid > div {
+      border-color: #1e293b !important;
+    }
+    
+    /* Smooth transitions */
+    .fade-enter-active, .fade-leave-active {
+      transition: opacity 0.2s ease;
+    }
+    .fade-enter-from, .fade-leave-to {
+      opacity: 0;
+    }
+    
+    .scale-enter-active, .scale-leave-active {
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .scale-enter-from, .scale-leave-to {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+  </style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="gas_backend.js"></script>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200">
+  <div id="app" >
+
+    <!-- Login Overlay -->
+    <div v-if="!isLoggedIn" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+      <div class="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 max-w-md w-full text-center">
+        <div class="w-16 h-16 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-md mx-auto mb-6">
+          <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+            <path d="m9 16 2 2 4-4"></path>
+          </svg>
+        </div>
+        <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white mb-2">Duty Roster</h2>
+        <p class="text-slate-500 dark:text-slate-400 mb-8">เข้าสู่ระบบเพื่อจัดการตารางเวรของคุณ</p>
+        
+        
+      </div>
+    </div>
+
+    <!-- Upper Navigation / Header -->
+    <header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-sm transition-colors duration-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+        <!-- Logo / Brand -->
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md">
+            <!-- CalendarCheck2 icon -->
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+              <path d="m9 16 2 2 4-4"></path>
+            </svg>
+          </div>
+          <div>
+            <h1 class="font-extrabold text-slate-900 dark:text-slate-50 leading-none text-base sm:text-lg">Duty Roster</h1>
+          </div>
+        </div>
+
+        <!-- Right Header Items -->
+        <div class="flex items-center gap-3">
+          <!-- Open Spreadsheet button -->
+          <a v-if="spreadsheetId"
+             :href="'https://docs.google.com/spreadsheets/d/' + spreadsheetId + '/edit'"
+             target="_blank"
+             class="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 font-bold rounded-xl border border-emerald-100 dark:border-emerald-900/30 transition-colors"
+             title="เปิดฐานข้อมูลใน Google Sheets">
+            <!-- FileSpreadsheet Icon -->
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path>
+              <path d="M14 2v4a2 2 0 0 0 2 2h4"></path>
+              <path d="M8 13h8"></path>
+              <path d="M8 17h8"></path>
+              <path d="M10 9H8"></path>
+            </svg>
+            <span>เปิด Google Sheets</span>
+            <!-- ExternalLink Icon -->
+            <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+              <polyline points="15 3 21 3 21 9"></polyline>
+              <line x1="10" y1="14" x2="21" y2="3"></line>
+            </svg>
+          </a>
+
+          <!-- Theme switcher -->
+          <div class="inline-flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl text-xs border border-slate-200/60 dark:border-slate-700 shadow-inner">
+            <button @click="setTheme('light')"
+                    :class="theme === 'light' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:text-slate-500'"
+                    class="px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer"
+                    title="โหมดสว่าง">☀️</button>
+            <button @click="setTheme('dark')"
+                    :class="theme === 'dark' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:text-slate-500'"
+                    class="px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer"
+                    title="โหมดมืด">🌙</button>
+            <button @click="setTheme('auto')"
+                    :class="theme === 'auto' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-sm' : 'text-slate-400 hover:text-slate-600 dark:text-slate-500'"
+                    class="px-2 py-1 rounded-lg font-bold transition-all text-[9px] uppercase tracking-wider flex items-center justify-center cursor-pointer"
+                    title="ตามระบบ">Auto</button>
+          </div>
+
+          <!-- User Profile -->
+          <div class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 p-1 rounded-full pl-3 pr-2.5 shrink-0">
+            <div class="text-right hidden sm:block">
+              <p class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-none max-w-[120px] truncate">บัญชีผู้ใช้งาน</p>
+              <p class="text-[9px] text-slate-400 dark:text-slate-500 mt-0.5 max-w-[120px] truncate">{{ userEmail }}</p>
+            </div>
+            <div class="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-xs font-bold shadow-inner">
+              <!-- User Icon -->
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
+      <!-- Loader Cover (Setup initial state) -->
+      <div v-if="isSettingUp" class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-12 text-center shadow-md space-y-4">
+        <div class="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <h2 class="text-base font-bold text-slate-800 dark:text-slate-100">กำลังเชื่อมต่อฐานข้อมูล Google ของคุณ...</h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400 animate-pulse">{{ setupStatus }}</p>
+      </div>
+
+      <div v-else class="space-y-6">
+        <!-- Error alert banner -->
+        <div v-if="error" class="p-4 bg-rose-50 dark:bg-rose-950/30 text-rose-950 dark:text-rose-200 border border-rose-200 dark:border-rose-900/50 rounded-2xl flex items-center gap-3">
+          <span class="p-1 bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-400 rounded-lg shrink-0">⚠️</span>
+          <div class="text-xs font-semibold leading-relaxed flex-1">{{ error }}</div>
+          <button @click="error = null" class="text-xs hover:underline text-rose-700 dark:text-rose-400 shrink-0 font-bold">ปิด</button>
+        </div>
+
+        <!-- Success/Info toast banner -->
+        <div v-if="statusMessage" class="p-4 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-950 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-900/50 rounded-2xl flex items-center gap-3">
+          <span class="p-1 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-400 rounded-lg shrink-0">✨</span>
+          <div class="text-xs font-semibold leading-relaxed flex-1">{{ statusMessage }}</div>
+          <button @click="statusMessage = null" class="text-xs hover:underline text-indigo-700 dark:text-indigo-400 shrink-0 font-bold">ปิด</button>
+        </div>
+
+        <!-- Month Navigation and Controls -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors duration-200">
+          <div class="flex flex-nowrap items-center gap-1.5 xs:gap-3 overflow-x-auto no-scrollbar w-full sm:w-auto">
+            <!-- Prev Month Button -->
+            <button @click="handlePrevMonth"
+                    class="p-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer text-slate-700 dark:text-slate-300 shrink-0">
+              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+            
+            <!-- Month Name Title -->
+            <div class="text-center md:text-left min-w-[110px] xs:min-w-[130px] shrink-0">
+              <h2 class="text-sm xs:text-base sm:text-lg font-extrabold text-slate-800 dark:text-slate-100 tracking-tight leading-none">
+                {{ getThaiMonthName(currentMonth) }} {{ currentYear + 543 }}
+              </h2>
+              <span class="text-[10px] sm:text-xs text-slate-400 dark:text-slate-500 block mt-0.5 sm:mt-1">
+                คริสต์ศักราช {{ currentYear }}
+              </span>
+            </div>
+
+            <!-- Next Month Button -->
+            <button @click="handleNextMonth"
+                    class="p-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer text-slate-700 dark:text-slate-300 shrink-0">
+              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+ 
+            <!-- Create Next Month Button -->
+            <button @click="handleCreateNextMonth"
+                    class="p-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900 text-xs font-bold rounded-xl transition-colors cursor-pointer flex items-center justify-center h-[38px] w-[38px] shrink-0"
+                    title="เริ่มสร้างเวรประจำวันเดือนถัดไป">
+              <svg class="h-5 w-5 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
+ 
+            <!-- Refresh Button -->
+            <button @click="loadMonthData"
+                    :disabled="isLoadingData"
+                    class="p-2 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl transition-colors cursor-pointer disabled:opacity-50 flex items-center justify-center h-[38px] w-[38px] shrink-0"
+                    title="ดึงข้อมูลล่าสุดจาก Google Sheets">
+              <svg :class="isLoadingData ? 'animate-spin text-indigo-600' : ''" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.72 2.78L21 8"></path>
+                <polyline points="21 3 21 8 16 8"></polyline>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Quick status indicators (desktop only) -->
+          <div class="hidden sm:flex items-center gap-3">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-300 text-xs font-semibold rounded-full border border-indigo-100 dark:border-indigo-950">
+              <span class="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-ping"></span>
+              <span>เลือกวันสำหรับลงเวร: {{ selectedDates.length }} วัน</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Calendar Component Display -->
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden transition-colors duration-200" id="calendar-view">
+          <!-- Calendar Title Header -->
+          <div class="text-center py-2.5 bg-indigo-50/50 dark:bg-indigo-950/20 border-b border-indigo-100/50 dark:border-indigo-900/30">
+            <h2 class="text-lg font-extrabold text-indigo-900 dark:text-indigo-200">
+              ตารางเวรประจำเดือน {{ getThaiMonthName(currentMonth) }} {{ currentYear + 543 }}
+            </h2>
+          </div>
+
+          <!-- Weekday Headers -->
+          <div class="grid grid-cols-7 border-b border-slate-100 dark:border-slate-800 text-center bg-slate-50/50 dark:bg-slate-800/20 text-[11px] font-bold py-1.5 transition-colors">
+            <div v-for="(w, idx) in ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์']" 
+                 :class="idx === 0 || idx === 6 ? 'text-rose-500 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400'">
+              <span class="hidden sm:inline">{{ w }}</span>
+              <span class="inline sm:hidden">{{ ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'][idx] }}</span>
+            </div>
+          </div>
+
+          <!-- Calendar Cell Grid -->
+          <div class="grid grid-cols-7 gap-1.5 sm:gap-2 p-2 sm:p-3 bg-slate-50/80 dark:bg-slate-950/50 transition-colors">
+            <div v-for="(dayNum, cellIndex) in daysArray" :key="cellIndex">
+              <!-- Empty spacer cells -->
+              <div v-if="dayNum === null" 
+                   class="min-h-[64px] xs:min-h-[72px] sm:h-[90px] rounded-2xl bg-slate-200/30 dark:bg-slate-800/20 border border-transparent">
+              </div>
+
+              <!-- Real Day cells -->
+              <div v-else
+                   @click="handleToggleDate(dayNum)"
+                   :class="[
+                     getDayHolidayInfo(dayNum).isHoliday 
+                       ? 'bg-rose-50 border-rose-100 hover:bg-rose-100 hover:border-rose-200 hover:shadow-md dark:bg-rose-950/20 dark:border-rose-900/30 dark:hover:bg-rose-900/40 dark:hover:border-rose-800/50' 
+                       : 'bg-white border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/50 hover:shadow-md dark:bg-slate-800/90 dark:border-slate-700/60 dark:hover:bg-slate-700 dark:hover:border-slate-600',
+                     isDateSelected(dayNum)
+                       ? 'ring-2 ring-indigo-500 shadow-md ring-offset-1 dark:ring-offset-slate-950 z-10 bg-indigo-50 dark:bg-indigo-900/40 border-indigo-300 dark:border-indigo-600'
+                       : 'shadow-sm'
+                   ]"
+                   class="min-h-[64px] xs:min-h-[72px] sm:h-[90px] rounded-2xl p-1 sm:p-2 transition-all duration-200 relative cursor-pointer flex flex-col justify-start gap-1 sm:gap-1.5 border">
+                
+                <!-- Day Header -->
+                <div class="flex items-start justify-between gap-1">
+                  <span :class="getDayHolidayInfo(dayNum).isHoliday 
+                                 ? 'bg-gradient-to-br from-rose-400 to-rose-500 text-white dark:from-rose-800 dark:to-rose-900 dark:text-rose-100'
+                                 : 'bg-gradient-to-br from-slate-100 to-slate-200 text-slate-700 border border-slate-200 dark:from-slate-700 dark:to-slate-800 dark:text-slate-200 dark:border-slate-600'"
+                        class="w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center font-bold text-[11px] sm:text-xs shadow-sm">
+                    {{ dayNum }}
+                  </span>
+                </div>
+
+                <!-- Shift Badges -->
+                <div class="w-full flex flex-col gap-1 sm:gap-1.5 z-20">
+                  <!-- Morning Shift -->
+                  <div v-if="getShiftsForDay(dayNum).morning"
+                       class="bg-gradient-to-r from-emerald-100 to-teal-50 dark:from-emerald-900/50 dark:to-teal-900/30 border border-emerald-200/80 dark:border-emerald-800/50 hover:from-emerald-200 hover:to-teal-100 dark:hover:from-emerald-800/60 dark:hover:to-teal-800/40 rounded-lg px-1.5 sm:px-2 py-1 text-[7.5px] xs:text-[8px] sm:text-[10px] text-emerald-800 dark:text-emerald-300 font-bold flex items-center justify-between gap-0.5 sm:gap-1 group shadow-sm transition-all duration-200">
+                    <span class="flex items-start gap-0.5 sm:gap-1 min-w-0 w-full" :title="'เวรเช้า' + (getShiftsForDay(dayNum).morning.notes ? ': ' + getShiftsForDay(dayNum).morning.notes : '')">
+                      <!-- Sun icon -->
+                      <svg class="hidden sm:inline-block h-2.5 w-2.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                      <span class="break-words whitespace-normal w-full block leading-tight">
+                        เช้า<span v-if="getShiftsForDay(dayNum).morning.notes" class="font-normal"> ({{ getShiftsForDay(dayNum).morning.notes }})</span>
+                      </span>
+                    </span>
+                    <!-- Quick action buttons -->
+                    <div class="hidden group-hover:flex items-center gap-0.5 sm:gap-1 shrink-0 bg-white/50 dark:bg-slate-900/50 rounded-md p-0.5">
+                      <button @click.stop="handleQuickEditShift(dayNum, 'morning', getShiftsForDay(dayNum).morning.notes)"
+                              class="p-0.5 text-emerald-700 dark:text-emerald-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded cursor-pointer transition-colors"
+                              title="แก้ไขหมายเหตุ">
+                        <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </button>
+                      <button @click.stop="handleDeleteShift(dayNum, 'morning')"
+                              class="p-0.5 text-emerald-700 dark:text-emerald-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-white dark:hover:bg-slate-800 rounded cursor-pointer transition-colors"
+                              title="ลบเวร">
+                        <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Afternoon Shift -->
+                  <div v-if="getShiftsForDay(dayNum).afternoon"
+                       class="bg-gradient-to-r from-amber-100 to-orange-50 dark:from-amber-900/50 dark:to-orange-900/30 border border-amber-200/80 dark:border-amber-800/50 hover:from-amber-200 hover:to-orange-100 dark:hover:from-amber-800/60 dark:hover:to-orange-800/40 rounded-lg px-1.5 sm:px-2 py-1 text-[7.5px] xs:text-[8px] sm:text-[10px] text-amber-900 dark:text-amber-300 font-bold flex items-center justify-between gap-0.5 sm:gap-1 group shadow-sm transition-all duration-200">
+                    <span class="flex items-start gap-0.5 sm:gap-1 min-w-0 w-full" :title="'เวรบ่าย' + (getShiftsForDay(dayNum).afternoon.notes ? ': ' + getShiftsForDay(dayNum).afternoon.notes : '')">
+                      <!-- Moon icon -->
+                      <svg class="hidden sm:inline-block h-2.5 w-2.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                      <span class="break-words whitespace-normal w-full block leading-tight">
+                        บ่าย<span v-if="getShiftsForDay(dayNum).afternoon.notes" class="font-normal"> ({{ getShiftsForDay(dayNum).afternoon.notes }})</span>
+                      </span>
+                    </span>
+                    <!-- Quick action buttons -->
+                    <div class="hidden group-hover:flex items-center gap-0.5 sm:gap-1 shrink-0 bg-white/50 dark:bg-slate-900/50 rounded-md p-0.5">
+                      <button @click.stop="handleQuickEditShift(dayNum, 'afternoon', getShiftsForDay(dayNum).afternoon.notes)"
+                              class="p-0.5 text-amber-700 dark:text-amber-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-white dark:hover:bg-slate-800 rounded cursor-pointer transition-colors"
+                              title="แก้ไขหมายเหตุ">
+                        <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </button>
+                      <button @click.stop="handleDeleteShift(dayNum, 'afternoon')"
+                              class="p-0.5 text-amber-700 dark:text-amber-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-white dark:hover:bg-slate-800 rounded cursor-pointer transition-colors"
+                              title="ลบเวร">
+                        <svg class="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Checked selected badge icon -->
+                <span v-if="isDateSelected(dayNum)" 
+                      class="absolute bottom-1 right-1 w-3.5 h-3.5 sm:w-4 sm:h-4 bg-indigo-600 text-white rounded-full flex items-center justify-center shadow-sm">
+                  <!-- Check icon -->
+                  <svg class="h-2.5 sm:h-3 w-2.5 sm:w-3 stroke-[4]" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Calendar Holiday Legends footer -->
+          <div v-if="activeHolidaysList.length > 0" 
+               class="p-4 bg-orange-50/30 dark:bg-orange-950/10 border-t border-slate-200 dark:border-slate-800 text-[11px] sm:text-xs text-orange-800 dark:text-orange-400 transition-colors">
+            <div class="font-bold flex items-center gap-1 mb-1.5 text-orange-900 dark:text-orange-300">
+              <span class="text-sm">🗓️</span> รายละเอียดวันหยุดประจำเดือน:
+            </div>
+            <div class="flex flex-wrap gap-x-3 gap-y-1.5">
+              <div v-for="h in activeHolidaysList" :key="h.day" 
+                   class="flex items-center gap-1 bg-white dark:bg-slate-900/60 border border-orange-200/40 dark:border-orange-900/40 px-2 py-0.5 rounded-lg font-semibold shadow-sm text-[10px] sm:text-xs whitespace-nowrap">
+                <span class="font-extrabold text-orange-600 dark:text-orange-400">วันที่ {{ h.day }}:</span>
+                <span class="text-slate-700 dark:text-slate-300">{{ h.name }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Buttons Panel - Custom Actions -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl shadow-sm transition-colors duration-200">
+          <!-- Button: Bulk scheduler -->
+          <button @click="isRosterModalOpen = true"
+                  :class="[
+                    selectedDates.length > 0 
+                      ? 'bg-violet-600 hover:bg-violet-700 text-white border-violet-600 shadow-md ring-2 ring-violet-500/30' 
+                      : 'bg-violet-50 hover:bg-violet-100 dark:bg-violet-950/40 dark:hover:bg-violet-900/40 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-900'
+                  ]"
+                  class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 sm:px-6 py-2.5 text-xs font-bold rounded-xl transition-all border cursor-pointer w-full sm:w-auto">
+            <!-- UserCheck Icon -->
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <polyline points="16 11 18 13 22 9"></polyline>
+            </svg>
+            <span>จัดตารางเวรด่วน {{ selectedDates.length > 0 ? '(' + selectedDates.length + ')' : '' }}</span>
+          </button>
+
+          <!-- Button: Holiday override -->
+          <button @click="isHolidayModalOpen = true"
+                  class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 sm:px-6 py-2.5 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/30 dark:hover:bg-amber-900/30 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900/60 text-xs font-bold rounded-xl transition-colors cursor-pointer w-full sm:w-auto">
+            <!-- CalendarDays Icon -->
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+              <path d="M8 14h.01"></path>
+              <path d="M12 14h.01"></path>
+              <path d="M16 14h.01"></path>
+              <path d="M8 18h.01"></path>
+              <path d="M12 18h.01"></path>
+              <path d="M16 18h.01"></path>
+            </svg>
+            <span>ตั้งค่าวันทำงานและวันหยุด</span>
+          </button>
+
+          <!-- Button: Toggle Album gallery -->
+          <button @click="isImageManagerOpen = !isImageManagerOpen"
+                  :class="[
+                    isImageManagerOpen 
+                      ? 'bg-indigo-600 hover:bg-indigo-700 text-white border-indigo-600 shadow-md ring-2 ring-indigo-500/30' 
+                      : 'bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900/60'
+                  ]"
+                  class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 sm:px-6 py-2.5 text-xs font-bold rounded-xl transition-colors border cursor-pointer w-full sm:w-auto">
+            <!-- ImageIcon -->
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <polyline points="21 15 16 10 5 21"></polyline>
+            </svg>
+            <span>{{ isImageManagerOpen ? 'ซ่อนอัลบั้มภาพ' : 'อัลบั้มรูปภาพประจำเดือน' }}</span>
+          </button>
+
+          <!-- Button: Download as Image -->
+          <button @click="handleDownloadImage"
+                  class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 sm:px-6 py-2.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:hover:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/60 text-xs font-bold rounded-xl transition-colors cursor-pointer w-full sm:w-auto">
+            <!-- DownloadIcon -->
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>บันทึกตารางเป็นรูปภาพ</span>
+          </button>
+        </div>
+
+        <!-- Image Gallery and Upload (Collapsible) -->
+        <transition name="scale">
+          <div v-show="isImageManagerOpen" 
+               class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm p-4 sm:p-6 transition-colors duration-200 space-y-6">
+            
+            <div class="border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                📁 อัลบั้มภาพและเอกสารประจำเดือน: {{ getThaiMonthName(currentMonth) }} {{ currentYear + 543 }}
+              </h3>
+              <p class="text-[10px] sm:text-xs text-slate-400 mt-1">อัปโหลดภาพใบลงเวลาเซ็นชื่อ, สรุปเวร หรือเอกสารต่างๆ เก็บไว้บน Google Drive ภายใต้โฟลเดอร์ Duty Roster Images ได้อย่างปลอดภัย</p>
+            </div>
+
+            <!-- Drag & Drop Upload Section -->
+            <div @dragover="onDragOver"
+                 @dragleave="onDragLeave"
+                 @drop="onDrop"
+                 :class="[
+                   isDragging 
+                     ? 'border-indigo-500 bg-indigo-50/40 dark:bg-indigo-950/20' 
+                     : 'border-slate-200 hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700'
+                 ]"
+                 class="border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center transition-all cursor-pointer relative">
+              
+              <input type="file" 
+                     id="file-upload" 
+                     ref="fileInput" 
+                     @change="onFileChange" 
+                     accept="image/*" 
+                     class="hidden">
+              
+              <label for="file-upload" class="cursor-pointer flex flex-col items-center justify-center gap-2.5">
+                <div class="w-11 h-11 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400">
+                  <svg class="h-6 w-6 stroke-[1.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                </div>
+                <div class="space-y-1">
+                  <p class="text-xs sm:text-sm font-extrabold text-slate-700 dark:text-slate-200">
+                    คลิกเพื่ออัปโหลด หรือลากไฟล์ภาพมาวางที่นี่
+                  </p>
+                  <p class="text-[10px] text-slate-400">รองรับไฟล์รูปภาพเท่านั้น (JPG, PNG, WebP) ขนาดสูงสุดไม่เกิน 10MB</p>
+                </div>
+              </label>
+            </div>
+
+            <!-- Uploading Spinner -->
+            <div v-if="isUploading" class="p-4 flex items-center justify-center gap-2 bg-slate-50 dark:bg-slate-950/30 border border-slate-100 dark:border-slate-800 rounded-2xl">
+              <div class="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+              <span class="text-xs text-slate-500 font-bold">กำลังอัปโหลดไฟล์ภาพไปยังบัญชี Google Drive ของคุณ...</span>
+            </div>
+
+            <!-- Image Records Grid -->
+            <div class="space-y-3">
+              <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">ภาพและเอกสารแนบในเดือนนี้ ({{ currentMonthImages.length }} รายการ):</h4>
+              
+              <div v-if="currentMonthImages.length === 0" 
+                   class="p-8 border border-slate-100 dark:border-slate-800/80 rounded-2xl text-center text-xs text-slate-400 bg-slate-50/40 dark:bg-slate-950/10">
+                ยังไม่มีการแนบรูปภาพหรือเอกสารสำหรับเดือนนี้
+              </div>
+
+              <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                <div v-for="img in currentMonthImages" 
+                     :key="img.driveFileId" 
+                     class="border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm bg-white dark:bg-slate-950/30 group hover:shadow-md transition-all relative">
+                  
+                  <!-- Thumbnail Loader aspect square -->
+                  <div class="aspect-square bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden cursor-pointer"
+                       @click="openPreview(img.driveFileId)">
+                    
+                    <img v-if="imageBlobUrls[img.driveFileId]" 
+                         :src="imageBlobUrls[img.driveFileId]" 
+                         :alt="img.fileName"
+                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                    
+                    <div v-else class="text-center p-3 space-y-1">
+                      <div class="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                      <span class="text-[9px] text-slate-400 block font-semibold leading-none">ดาวน์โหลด...</span>
+                    </div>
+                  </div>
+
+                  <!-- Overlay details -->
+                  <div class="p-2 border-t border-slate-100 dark:border-slate-800">
+                    <p class="text-[10px] font-bold text-slate-700 dark:text-slate-300 truncate" :title="img.fileName">{{ img.fileName }}</p>
+                    <p class="text-[8px] text-slate-400 mt-0.5">อัปโหลดเมื่อ: {{ formatDateThai(img.uploadedAt) }}</p>
+                  </div>
+
+                  <!-- Trash delete icon button (Hover) -->
+                  <button @click="handleDeleteImage(img.driveFileId)"
+                          class="absolute top-2 right-2 p-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl shadow-md cursor-pointer md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </transition>
+
+      </div>
+    </main>
+
+    <!-- Roster Bulk Scheduler Modal Overlay -->
+    <transition name="fade">
+      <div v-if="isRosterModalOpen" 
+           class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        
+        <div class="relative bg-white dark:bg-slate-900 max-w-lg w-full rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl overflow-hidden transition-colors duration-200">
+          
+          <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+              📅 จัดเวรปฏิบัติงานแบบกลุ่ม / รายวัน
+            </h3>
+            <button @click="isRosterModalOpen = false" 
+                    class="p-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400 rounded-xl transition-colors cursor-pointer">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+
+          <div class="p-5 space-y-4 max-h-[70vh] overflow-y-auto no-scrollbar">
+            <!-- Selected days list tags -->
+            <div class="space-y-2">
+              <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">วันที่เลือกจัดเวร ({{ selectedDates.length }} วัน):</label>
+              
+              <div v-if="selectedDates.length === 0" 
+                   class="p-4 bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/40 rounded-2xl text-[11px] text-amber-800 dark:text-amber-400 font-bold leading-relaxed">
+                👉 กรุณาคลิกเลือกวันบนปฏิทิน (หรือคลิกปุ่มเลือกด่วนด้านล่าง) เพื่อลงตารางเวรให้วันนั้นๆ
+              </div>
+
+              <div v-else class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-1 border border-slate-100 dark:border-slate-800/80 rounded-xl bg-slate-50/30 dark:bg-slate-950/10">
+                <span v-for="dStr in sortedSelectedDates" 
+                      :key="dStr" 
+                      class="inline-flex items-center gap-1 px-2 py-1 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-700 dark:text-slate-300 shadow-sm">
+                  <span>{{ formatDateStrThai(dStr) }}</span>
+                  <button @click="removeSelectedDate(dStr)" class="text-rose-500 hover:text-rose-600 focus:outline-none">✕</button>
+                </span>
+              </div>
+            </div>
+
+            <!-- Quick Day Presets -->
+            <div class="grid grid-cols-3 gap-2">
+              <button @click="selectAllWeekdays" 
+                      class="px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-100 dark:border-slate-700 text-[10px] font-bold rounded-lg transition-all cursor-pointer">
+                💼 เลือกวันทำการทั้งหมด
+              </button>
+              <button @click="selectAllWeekends" 
+                      class="px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-100 dark:border-slate-700 text-[10px] font-bold rounded-lg transition-all cursor-pointer">
+                🎉 เลือกวันหยุดทั้งหมด
+              </button>
+              <button @click="clearSelectedDates" 
+                      class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-900/20 border border-rose-100 dark:border-rose-900 text-[10px] font-bold text-rose-600 dark:text-rose-400 rounded-lg transition-all cursor-pointer">
+                🧹 ล้างการเลือก
+              </button>
+            </div>
+
+            <!-- Form: Shift details -->
+            <div class="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <!-- Shift Type Selection Cards -->
+              <div class="space-y-1.5">
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">เลือกช่วงเวรปฏิบัติงาน:</label>
+                <div class="grid grid-cols-3 gap-3">
+                  <!-- Morning -->
+                  <div @click="rosterForm.shiftType = 'morning'"
+                       :class="rosterForm.shiftType === 'morning' ? 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20 ring-1 ring-emerald-500' : 'border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800/50'"
+                       class="border p-3 rounded-2xl text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-1.5 shadow-sm">
+                    <div class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                      <svg class="h-4 w-4 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                    </div>
+                    <span class="text-[11px] font-extrabold text-slate-700 dark:text-slate-200">เวรเช้า (08:00 - 16:00)</span>
+                  </div>
+
+                  <!-- Afternoon -->
+                  <div @click="rosterForm.shiftType = 'afternoon'"
+                       :class="rosterForm.shiftType === 'afternoon' ? 'border-amber-500 bg-amber-50/40 dark:bg-amber-950/20 ring-1 ring-amber-500' : 'border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800/50'"
+                       class="border p-3 rounded-2xl text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-1.5 shadow-sm">
+                    <div class="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                      <svg class="h-4 w-4 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    </div>
+                    <span class="text-[11px] font-extrabold text-slate-700 dark:text-slate-200">เวรบ่าย (16:00 - 24:00)</span>
+                  </div>
+
+                  <!-- Both -->
+                  <div @click="rosterForm.shiftType = 'both'"
+                       :class="rosterForm.shiftType === 'both' ? 'border-indigo-500 bg-indigo-50/40 dark:bg-indigo-950/20 ring-1 ring-indigo-500' : 'border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800/50'"
+                       class="border p-3 rounded-2xl text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-1.5 shadow-sm">
+                    <div class="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                      <svg class="h-4 w-4 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    </div>
+                    <span class="text-[11px] font-extrabold text-slate-700 dark:text-slate-200">จัดลงทั้งเช้าและบ่าย</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Staff Name input (Default 'มีเวร') -->
+              <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">ผู้ปฏิบัติหน้าที่ / ผู้ลงเวร:</label>
+                <input type="text" 
+                       v-model="rosterForm.staffName" 
+                       placeholder="ตัวอย่างเช่น: มีเวร หรือชื่อเจ้าหน้าที่" 
+                       class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none font-semibold">
+              </div>
+
+              <!-- Notes optional input -->
+              <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">หมายเหตุเพิ่มเติม (ที่จะปรากฏในปฏิทิน):</label>
+                <input type="text" 
+                       v-model="rosterForm.notes" 
+                       placeholder="ตัวอย่างเช่น: ต.ค. แดง, ชื่อเล่น หรือรายละเอียดเวร" 
+                       class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none font-semibold">
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="p-5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
+            <button @click="isRosterModalOpen = false" 
+                    class="px-4 py-2 text-xs font-extrabold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer">
+              ยกเลิก
+            </button>
+            <button @click="handleSaveRosterShifts" 
+                    :disabled="isSavingData || selectedDates.length === 0"
+                    class="px-5 py-2 text-xs font-extrabold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50">
+              <span v-if="isSavingData" class="flex items-center gap-1.5">
+                <span class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                <span>กำลังบันทึก...</span>
+              </span>
+              <span v-else>บันทึกตารางเวร</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </transition>
+
+    <!-- Holiday & Workday Override Settings Modal Overlay -->
+    <transition name="fade">
+      <div v-if="isHolidayModalOpen" 
+           class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        
+        <div class="relative bg-white dark:bg-slate-900 max-w-2xl w-full rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl overflow-hidden transition-colors duration-200 flex flex-col max-h-[85vh]">
+          
+          <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
+            <div>
+              <h3 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                🛠️ ปรับแต่งวันทำงานและวันหยุดพิเศษ
+              </h3>
+              <p class="text-[10px] text-slate-400 mt-0.5">คุณสามารถกำหนดค่าทับวันหยุดราชการไทย หรือระบุวันเสาร์-อาทิตย์ให้ทำงานได้รายวัน</p>
+            </div>
+            <button @click="isHolidayModalOpen = false" 
+                    class="p-1.5 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-400 rounded-xl transition-colors cursor-pointer">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+
+          <!-- Days List Container scrollable -->
+          <div class="flex-1 overflow-y-auto p-5 space-y-2.5 no-scrollbar">
+            <div v-for="dayObj in holidayFormDays" 
+                 :key="dayObj.date"
+                 :class="[
+                   dayObj.isHoliday 
+                     ? 'bg-rose-50/40 dark:bg-rose-950/10 border-rose-100/50 dark:border-rose-900/30' 
+                     : 'bg-slate-50/40 dark:bg-slate-900/30 border-slate-100 dark:border-slate-800'
+                 ]"
+                 class="border p-2.5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+              
+              <!-- Date Label -->
+              <div class="flex items-center gap-2.5">
+                <span :class="[
+                        dayObj.isHoliday
+                          ? 'bg-gradient-to-br from-rose-400 to-rose-500 text-white'
+                          : 'bg-gradient-to-br from-slate-100 to-slate-200 text-slate-700 dark:from-slate-700 dark:to-slate-800 dark:text-slate-200'
+                      ]"
+                      class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">
+                  {{ dayObj.day }}
+                </span>
+                <div class="text-left">
+                  <p class="text-xs font-bold text-slate-800 dark:text-slate-100">{{ formatDateLabelThai(dayObj.date) }}</p>
+                  <p v-if="dayObj.defaultHolidayName" class="text-[9px] font-bold text-amber-600 dark:text-amber-400 mt-0.5">🗓️ วันหยุดเริ่มต้น: {{ dayObj.defaultHolidayName }}</p>
+                </div>
+              </div>
+
+              <!-- Controls -->
+              <div class="flex items-center gap-3 justify-between sm:justify-end">
+                <!-- Text input custom name -->
+                <input type="text" 
+                       v-model="dayObj.name"
+                       placeholder="ชื่อวันหยุดพิเศษ/หมายเหตุ" 
+                       :disabled="!dayObj.isHoliday"
+                       class="px-3 py-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-[11px] focus:ring-1 focus:ring-indigo-500 outline-none font-semibold disabled:opacity-50 max-w-[160px] sm:max-w-[200px]">
+
+                <!-- IsHoliday toggle button -->
+                <button @click="dayObj.isHoliday = !dayObj.isHoliday"
+                        :class="[
+                          dayObj.isHoliday 
+                            ? 'bg-rose-600 hover:bg-rose-700 border-rose-600 text-white' 
+                            : 'bg-emerald-600 hover:bg-emerald-700 border-emerald-600 text-white'
+                        ]"
+                        class="px-3 py-1.5 text-[10px] font-bold rounded-xl border shadow-sm transition-all cursor-pointer">
+                  {{ dayObj.isHoliday ? '🚨 วันหยุด' : '💼 วันทำงาน' }}
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Footer Actions -->
+          <div class="p-5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3 shrink-0">
+            <button @click="isHolidayModalOpen = false" 
+                    class="px-4 py-2 text-xs font-extrabold border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer">
+              ยกเลิก
+            </button>
+            <button @click="handleSaveHolidaySettings" 
+                    :disabled="isSavingData"
+                    class="px-5 py-2 text-xs font-extrabold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50">
+              <span v-if="isSavingData" class="flex items-center gap-1.5">
+                <span class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                <span>กำลังบันทึก...</span>
+              </span>
+              <span v-else>บันทึกการปรับแต่ง</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </transition>
+
+    <!-- Full Image Preview Lightbox -->
+    <transition name="fade">
+      <div v-if="isPreviewOpen" 
+           @click="isPreviewOpen = false"
+           class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-4 cursor-zoom-out">
+        
+        <div class="max-w-4xl w-full max-h-[90vh] flex flex-col justify-center items-center relative" @click.stop>
+          <img :src="imageBlobUrls[previewImageUrl]" 
+               alt="Attached Document" 
+               class="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl border border-slate-800">
+          
+          <!-- Close button -->
+          <button @click="isPreviewOpen = false" 
+                  class="absolute top-4 right-4 p-2 bg-slate-900/80 text-white hover:text-rose-400 hover:bg-slate-800/80 rounded-2xl cursor-pointer">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+      </div>
+    </transition>
+
+    <!-- Footer Status Banner -->
+    <footer class="mt-12 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-4 px-6 md:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs transition-colors duration-200">
+      <div class="flex flex-wrap items-center justify-center sm:justify-start gap-x-4 gap-y-2">
+        <div class="flex items-center gap-1.5">
+          <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+          <span class="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px]">ซิงโครไนซ์กับ Google Cloud สำเร็จ</span>
+        </div>
+        <span class="text-slate-300 dark:text-slate-700 hidden sm:inline">|</span>
+        <div class="text-[10px] text-slate-400 dark:text-slate-500 flex items-center gap-1">
+          <span class="font-medium">ไฟล์ตารางคำนวณ Sheets:</span>
+          <span class="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[9px] text-slate-600 dark:text-slate-400 truncate max-w-[150px]" :title="spreadsheetId || ''">
+            {{ spreadsheetId ? 'เชื่อมต่อสมบูรณ์' : 'รอดำเนินการ...' }}
+          </span>
+        </div>
+      </div>
+      <span class="text-slate-400 dark:text-slate-500 text-[10px] font-bold">
+        เปิดระบบภายใต้บริการ Google Apps Script ส่วนตัวปลอดภัย 100%
+      </span>
+    </footer>
+
+  </div>
+
+  <script>
+
+    // ==== Configurations ====
+    const ALLOWED_EMAIL = "wisut.pond@gmail.com";
+    const GOOGLE_CLIENT_ID = "636153093113-figfghllvhd43j1ihlj3i8dog73r8kb9.apps.googleusercontent.com";
+
+    // JWT Decode helper
+    function parseJwt (token) {
+        var base64Url = token.split('.')[1];
+        var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        while (base64.length % 4) {
+            base64 += '=';
+        }
+        var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    }
+    
+    // Core fetch helper
+    
+    const SPREADSHEET_ID = '13ULHjJBvPN2VK57vyixh1_kzQDXvCwj159jU3irm9uc';
+    const FOLDER_ID = '1L0nU3xZ7o1ox1hGMlAuJp2ZujOGaVePj';
+
+    async function sheetsApiGet(range) {
+        const token = localStorage.getItem('pond_ai_token');
+        const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message);
+        return data.values || [];
+    }
+
+    async function sheetsApiUpdate(range, values) {
+        const token = localStorage.getItem('pond_ai_token');
+        const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?valueInputOption=USER_ENTERED`, {
+            method: 'PUT',
+            headers: { 
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ values: values }) // Note: values is an array of arrays
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message);
+        return data;
+    }
+    
+    async function sheetsApiClear(range) {
+        const token = localStorage.getItem('pond_ai_token');
+        const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}:clear`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        return data;
+    }
+
+    async function sheetsApiAppend(range, values) {
+        const token = localStorage.getItem('pond_ai_token');
+        const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}:append?valueInputOption=USER_ENTERED`, {
+            method: 'POST',
+            headers: { 
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ values: [values] })
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message);
+        return data;
+    }
+
+    async function driveApiUpload(fileName, base64Data, mimeType, parentFolderId) {
+        const token = localStorage.getItem('pond_ai_token');
+        // Convert base64 to blob
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: mimeType });
+
+        const metadata = {
+            name: fileName,
+            parents: [parentFolderId]
+        };
+
+        const formData = new FormData();
+        formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+        formData.append('file', blob);
+
+        const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
+            body: formData
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message);
+        return data;
+    }
+    
+    async function driveApiShare(fileId) {
+        const token = localStorage.getItem('pond_ai_token');
+        await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
+            method: 'POST',
+            headers: { 
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ role: 'reader', type: 'anyone' })
+        });
+    }
+
+    async function driveApiDelete(fileId) {
+        const token = localStorage.getItem('pond_ai_token');
+        await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` }
+        });
+    }
+
+    async function gasFetch(action, payload = {}, userEmail = '', retries = 1) {
+        try {
+            if (action === 'getSpreadsheetIdAndFolderId') {
+                return { spreadsheetId: SPREADSHEET_ID, folderId: FOLDER_ID, userEmail: 'wisut.pond@gmail.com' };
+            }
+            
+            if (action === 'fetchCustomHolidays') {
+                const data = await sheetsApiGet('Holidays!A2:C');
+                return data.map(row => ({
+                    date: row[0] || '',
+                    name: row[1] || '',
+                    isHoliday: row[2] === 'TRUE' || row[2] === true
+                })).filter(h => h.date);
+            }
+            
+            if (action === 'saveCustomHolidays') {
+                const existing = await gasFetch('fetchCustomHolidays');
+                const holidaysMap = {};
+                existing.forEach(h => holidaysMap[h.date] = h);
+                payload.holidays.forEach(h => holidaysMap[h.date] = h);
+                
+                const mergedList = Object.values(holidaysMap).sort((a, b) => a.date.localeCompare(b.date));
+                const values = mergedList.map(h => [h.date, h.name, h.isHoliday ? 'TRUE' : 'FALSE']);
+                
+                await sheetsApiClear('Holidays!A2:C');
+                if (values.length > 0) {
+                    await sheetsApiUpdate('Holidays!A2:C' + (values.length + 1), values);
+                }
+                return true;
+            }
+            
+            if (action === 'fetchDutyRoster') {
+                const data = await sheetsApiGet('DutyRoster!A2:D');
+                return data.map(row => ({
+                    date: row[0] || '',
+                    shiftType: row[1] || 'afternoon',
+                    staffName: row[2] || 'มีเวร',
+                    notes: row[3] || ''
+                })).filter(s => s.date);
+            }
+            
+            if (action === 'saveDutyShifts') {
+                const existing = await gasFetch('fetchDutyRoster');
+                const targetDatesSet = new Set(payload.targetDates);
+                
+                const remaining = existing.filter(s => !targetDatesSet.has(s.date));
+                const merged = remaining.concat(payload.shifts);
+                merged.sort((a, b) => {
+                    const dateCompare = a.date.localeCompare(b.date);
+                    if (dateCompare !== 0) return dateCompare;
+                    return a.shiftType.localeCompare(b.shiftType);
+                });
+                
+                const values = merged.map(s => [s.date, s.shiftType, s.staffName || 'มีเวร', s.notes || '']);
+                await sheetsApiClear('DutyRoster!A2:D');
+                if (values.length > 0) {
+                    await sheetsApiUpdate('DutyRoster!A2:D' + (values.length + 1), values);
+                }
+                return true;
+            }
+            
+            if (action === 'fetchMonthlyImages') {
+                const data = await sheetsApiGet('Images!A2:D');
+                return data.map(row => {
+                    let m = row[0] || '';
+                    if (m.startsWith("'")) m = m.substring(1);
+                    return {
+                        month: m.trim(),
+                        driveFileId: row[1] || '',
+                        fileName: row[2] || '',
+                        uploadedAt: row[3] || ''
+                    };
+                }).filter(img => img.driveFileId);
+            }
+            
+            if (action === 'uploadMonthlyImage') {
+                const file = await driveApiUpload(payload.fileName, payload.base64Data, payload.mimeType, FOLDER_ID);
+                await driveApiShare(file.id);
+                const uploadedAt = new Date().toISOString();
+                
+                await sheetsApiAppend('Images!A:D', [
+                    "'" + payload.month, file.id, payload.fileName, uploadedAt
+                ]);
+                return {
+                    month: payload.month,
+                    driveFileId: file.id,
+                    fileName: payload.fileName,
+                    uploadedAt: uploadedAt
+                };
+            }
+            
+            if (action === 'deleteMonthlyImage') {
+                await driveApiDelete(payload.driveFileId);
+                const existing = await sheetsApiGet('Images!A2:D');
+                const remaining = existing.filter(row => row[1] !== payload.driveFileId);
+                
+                await sheetsApiClear('Images!A2:D');
+                if (remaining.length > 0) {
+                    await sheetsApiUpdate('Images!A2:D' + (remaining.length + 1), remaining);
+                }
+                return true;
+            }
+            
+            if (action === 'fetchImageBase64') {
+                // By returning a public thumbnail URL, the browser loads it directly, bypassing CORS/Auth issues 
+                // and making the app significantly faster!
+                return `https://drive.google.com/thumbnail?id=${payload.driveFileId}&sz=w1000`;
+            }
+
+            throw new Error('Unknown action: ' + action);
+
+        } catch (err) {
+            console.error('API Error:', err);
+            throw err;
+        }
+    }
+
+
+    const lunarHolidays = {
+      2024: {
+        2: { 24: 'วันมาฆบูชา' },
+        5: { 10: 'วันพืชมงคล', 22: 'วันวิสาขบูชา' },
+        7: { 20: 'วันอาสาฬหบูชา', 21: 'วันเข้าพรรษา' },
+      },
+      2025: {
+        2: { 12: 'วันมาฆบูชา' },
+        5: { 9: 'วันพืชมงคล', 11: 'วันวิสาขบูชา' },
+        7: { 10: 'วันอาสาฬหบูชา', 11: 'วันเข้าพรรษา' },
+      },
+      2026: {
+        3: { 3: 'วันมาฆบูชา' },
+        5: { 11: 'วันพืชมงคล', 30: 'วันวิสาขบูชา' },
+        7: { 29: 'วันอาสาฬหบูชา', 30: 'วันเข้าพรรษา' },
+      },
+      2027: {
+        2: { 21: 'วันมาฆบูชา' },
+        5: { 14: 'วันพืชมงคล', 20: 'วันวิสาขบูชา' },
+        7: { 17: 'วันอาสาฬหบูชา', 18: 'วันเข้าพรรษา' },
+      },
+      2028: {
+        2: { 9: 'วันมาฆบูชา' },
+        5: { 12: 'วันพืชมงคล', 8: 'วันวิสาขบูชา' },
+        7: { 6: 'วันอาสาฬหบูชา', 7: 'วันเข้าพรรษา' },
+      },
+    };
+
+    const fixedHolidays = {
+      1: { 1: 'วันขึ้นปีใหม่' },
+      4: {
+        6: 'วันจักรี',
+        13: 'วันสงกรานต์',
+        14: 'วันสงกรานต์',
+        15: 'วันสงกรานต์'
+      },
+      5: {
+        1: 'วันแรงงานแห่งชาติ',
+        4: 'วันฉัตรมงคล'
+      },
+      6: {
+        3: 'วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าฯ พระบรมราชินี'
+      },
+      7: {
+        28: 'วันเฉลิมพระชนมพรรษาพระบาทสมเด็จพระเจ้าอยู่หัว'
+      },
+      8: {
+        12: 'วันเฉลิมพระชนมพรรษาสมเด็จพระบรมราชชนนีพันปีหลวง / วันแม่แห่งชาติ'
+      },
+      10: {
+        13: 'วันคล้ายวันสวรรคต ร.9 / วันนวมินทรมหาราช',
+        23: 'วันปิยมหาราช'
+      },
+      12: {
+        5: 'วันคล้ายวันพระบรมราชสมภพ ร.9 / วันชาติ / วันพ่อแห่งชาติ',
+        10: 'วันรัฐธรรมนูญ',
+        31: 'วันสิ้นปี'
+      },
+    };
+
+    const monthsThaiNames = [
+      'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+      'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+    ];
+
+    const weekdaysThaiFull = ['วันอาทิตย์', 'วันจันทร์', 'วันอังคาร', 'วันพุธ', 'วันพฤหัสบดี', 'วันศุกร์', 'วันเสาร์'];
+
+
+    const { createApp, ref, reactive, computed, onMounted, watch } = Vue;
+
+    createApp({
+      setup() {
+        // Auth states
+        const isLoggedIn = ref(false);
+        const userEmail = ref('');
+        const userName = ref('');
+        const userProfilePic = ref('');
+        
+        // App states
+        const spreadsheetId = ref('');
+        const folderId = ref('');
+        const isSettingUp = ref(true);
+        const setupStatus = ref('กำลังเตรียมระบบ...');
+
+        // Setup initial month/year from localStorage (last modified/viewed) or fallback to current real date
+        const now = new Date();
+        const storedYear = localStorage.getItem('duty_roster_last_year');
+        const storedMonth = localStorage.getItem('duty_roster_last_month');
+        
+        const currentYear = ref(storedYear ? parseInt(storedYear, 10) : now.getFullYear());
+        const currentMonth = ref(storedMonth ? parseInt(storedMonth, 10) : now.getMonth() + 1);
+
+        // Remember the latest viewed month so it opens to this month next time
+        watch([currentYear, currentMonth], ([newYear, newMonth]) => {
+          localStorage.setItem('duty_roster_last_year', newYear.toString());
+          localStorage.setItem('duty_roster_last_month', newMonth.toString());
+        });
+
+        // API raw data arrays
+        const shifts = ref([]);
+        const customHolidays = ref([]);
+        const images = ref([]);
+        const selectedDates = ref([]);
+
+        // Images blobs memory mapping
+        const imageBlobUrls = ref({});
+        const isDragging = ref(false);
+        const isUploading = ref(false);
+
+        // Modals control togglers
+        const isRosterModalOpen = ref(false);
+        const isHolidayModalOpen = ref(false);
+        const isImageManagerOpen = ref(false);
+        const isPreviewOpen = ref(false);
+        const previewImageUrl = ref('');
+
+        // Progress variables
+        const isLoadingData = ref(false);
+        const isSavingData = ref(false);
+        const error = ref(null);
+        const statusMessage = ref(null);
+
+        // Form templates
+        const rosterForm = reactive({
+          shiftType: 'morning',
+          staffName: 'มีเวร',
+          notes: ''
+        });
+
+        // Theme management
+        const theme = ref(localStorage.getItem('gas-duty-theme') || 'auto');
+
+        const applyTheme = () => {
+          const isDark = theme.value === 'dark' || 
+            (theme.value === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        };
+
+        const setTheme = (t) => {
+          theme.value = t;
+          localStorage.setItem('gas-duty-theme', t);
+          applyTheme();
+        };
+
+        // Listen for browser auto theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+          if (theme.value === 'auto') {
+            applyTheme();
+          }
+        });
+
+        // Calendar utilities
+        const daysArray = computed(() => {
+          const daysInMonth = new Date(currentYear.value, currentMonth.value, 0).getDate();
+          const firstDayIndex = new Date(currentYear.value, currentMonth.value - 1, 1).getDay();
+          
+          const arr = [];
+          for (let i = 0; i < firstDayIndex; i++) {
+            arr.push(null);
+          }
+          for (let d = 1; d <= daysInMonth; d++) {
+            arr.push(d);
+          }
+          return arr;
+        });
+
+        const isWeekend = (dateStr) => {
+          const date = new Date(dateStr);
+          const day = date.getDay();
+          return day === 0 || day === 6; // 0 = Sunday, 6 = Saturday
+        };
+
+        const getThaiHolidaysForMonth = (year, month) => {
+          const holidaysList = [];
+          
+          // 1. Fixed solar holidays
+          const fixed = fixedHolidays[month];
+          if (fixed) {
+            Object.keys(fixed).forEach((d) => {
+              const dayNum = parseInt(d, 10);
+              holidaysList.push({
+                date: `${year}-${String(month).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`,
+                name: fixed[dayNum],
+              });
+            });
+          }
+
+          // 2. Lunar moving holidays
+          const lunar = lunarHolidays[year];
+          if (lunar) {
+            const monthLunar = lunar[month];
+            if (monthLunar) {
+              Object.keys(monthLunar).forEach((d) => {
+                const dayNum = parseInt(d, 10);
+                const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+                if (!holidaysList.some((h) => h.date === dateStr)) {
+                  holidaysList.push({
+                    date: dateStr,
+                    name: monthLunar[dayNum],
+                  });
+                }
+              });
+            }
+          }
+
+          return holidaysList;
+        };
+
+        const getDayHolidayInfo = (dayNum) => {
+          const dateStr = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+          
+          // Custom override checks
+          const override = customHolidays.value.find(ch => ch.date === dateStr);
+          if (override) {
+            return {
+              isHoliday: override.isHoliday,
+              name: override.name
+            };
+          }
+
+          // Default holiday checks
+          const defaultGov = getThaiHolidaysForMonth(currentYear.value, currentMonth.value).find(gh => gh.date === dateStr);
+          const isWeekendDay = isWeekend(dateStr);
+
+          return {
+            isHoliday: isWeekendDay || !!defaultGov,
+            name: defaultGov ? defaultGov.name : (isWeekendDay ? 'วันหยุดสุดสัปดาห์' : '')
+          };
+        };
+
+        const getShiftsForDay = (dayNum) => {
+          const dateStr = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+          const dayShifts = shifts.value.filter(s => s.date === dateStr);
+          return {
+            morning: dayShifts.find(s => s.shiftType === 'morning'),
+            afternoon: dayShifts.find(s => s.shiftType === 'afternoon')
+          };
+        };
+
+        const isDateSelected = (dayNum) => {
+          const dateStr = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+          return selectedDates.value.includes(dateStr);
+        };
+
+        // UI Event handlers
+        const handleToggleDate = (dayNum) => {
+          const dateStr = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+          const idx = selectedDates.value.indexOf(dateStr);
+          if (idx > -1) {
+            selectedDates.value.splice(idx, 1);
+          } else {
+            selectedDates.value.push(dateStr);
+          }
+        };
+
+        const removeSelectedDate = (dateStr) => {
+          selectedDates.value = selectedDates.value.filter(d => d !== dateStr);
+        };
+
+        // Quick day selectors
+        const selectAllWeekdays = () => {
+          const daysInMonth = new Date(currentYear.value, currentMonth.value, 0).getDate();
+          const list = [];
+          for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const info = getDayHolidayInfo(d);
+            if (!info.isHoliday) {
+              list.push(dateStr);
+            }
+          }
+          selectedDates.value = list;
+        };
+
+        const selectAllWeekends = () => {
+          const daysInMonth = new Date(currentYear.value, currentMonth.value, 0).getDate();
+          const list = [];
+          for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const info = getDayHolidayInfo(d);
+            if (info.isHoliday) {
+              list.push(dateStr);
+            }
+          }
+          selectedDates.value = list;
+        };
+
+        const clearSelectedDates = () => {
+          selectedDates.value = [];
+        };
+
+        // Navigation
+        const handlePrevMonth = () => {
+          selectedDates.value = [];
+          if (currentMonth.value === 1) {
+            currentMonth.value = 12;
+            currentYear.value--;
+          } else {
+            currentMonth.value--;
+          }
+        };
+
+        const handleNextMonth = () => {
+          selectedDates.value = [];
+          if (currentMonth.value === 12) {
+            currentMonth.value = 1;
+            currentYear.value++;
+          } else {
+            currentMonth.value++;
+          }
+        };
+
+        const handleCreateNextMonth = () => {
+          selectedDates.value = [];
+          if (currentMonth.value === 12) {
+            currentMonth.value = 1;
+            currentYear.value++;
+          } else {
+            currentMonth.value++;
+          }
+          isRosterModalOpen.value = true;
+        };
+
+        // Formatting utilities for Thai language localization
+        const getThaiMonthName = (m) => monthsThaiNames[m - 1];
+        
+        const formatDateStrThai = (dateStr) => {
+          const parts = dateStr.split('-');
+          const d = parseInt(parts[2], 10);
+          const m = parseInt(parts[1], 10);
+          const y = parseInt(parts[0], 10) + 543;
+          return `${d} ${getThaiMonthName(m).substring(0, 4)} ${y.toString().substring(2)}`;
+        };
+
+        const formatDateLabelThai = (dateStr) => {
+          const dateObj = new Date(dateStr);
+          const parts = dateStr.split('-');
+          const d = parseInt(parts[2], 10);
+          const m = parseInt(parts[1], 10);
+          const y = parseInt(parts[0], 10) + 543;
+          const dayName = weekdaysThaiFull[dateObj.getDay()];
+          return `${dayName}ที่ ${d} ${getThaiMonthName(m)} พ.ศ. ${y}`;
+        };
+
+        const formatDateThai = (isoStr) => {
+          if (!isoStr) return '';
+          const dateObj = new Date(isoStr);
+          const d = dateObj.getDate();
+          const m = dateObj.getMonth() + 1;
+          const y = dateObj.getFullYear() + 543;
+          const hr = String(dateObj.getHours()).padStart(2, '0');
+          const min = String(dateObj.getMinutes()).padStart(2, '0');
+          return `${d} ${getThaiMonthName(m).substring(0, 4)} ${y} ${hr}:${min} น.`;
+        };
+
+        // Compute holidays to list as a legend underneath the calendar view
+        const activeHolidaysList = computed(() => {
+          const list = [];
+          const daysInMonth = new Date(currentYear.value, currentMonth.value, 0).getDate();
+          for (let d = 1; d <= daysInMonth; d++) {
+            const info = getDayHolidayInfo(d);
+            if (info.isHoliday && info.name && info.name !== 'วันหยุดสุดสัปดาห์') {
+              list.push({ day: d, name: info.name });
+            }
+          }
+          return list;
+        });
+
+        // Compute current month images
+        const currentMonthStr = computed(() => {
+          return `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}`;
+        });
+
+        const currentMonthImages = computed(() => {
+          return images.value.filter(img => img.month === currentMonthStr.value);
+        });
+
+        const sortedSelectedDates = computed(() => {
+          return [...selectedDates.value].sort();
+        });
+
+        // Backend Google Apps Script calls
+        const initDatabase = () => {
+          // Check cache for instant load
+          const cacheKey = 'duty_roster_creds_' + userEmail.value;
+          const cachedCreds = localStorage.getItem(cacheKey);
+          
+          if (cachedCreds) {
+            try {
+              const creds = JSON.parse(cachedCreds);
+              spreadsheetId.value = creds.spreadsheetId;
+              folderId.value = creds.folderId;
+              isSettingUp.value = false;
+              loadMonthData(); // Load immediately using cached creds
+            } catch (e) {
+              console.error('Cache parse error', e);
+            }
+          }
+
+          gasFetch('getSpreadsheetIdAndFolderId', {}, userEmail.value)
+            .then((creds) => {
+              userEmail.value = creds.userEmail;
+              spreadsheetId.value = creds.spreadsheetId;
+              folderId.value = creds.folderId;
+              localStorage.setItem(cacheKey, JSON.stringify(creds));
+              
+              if (isSettingUp.value) { // Only false if cache missed
+                isSettingUp.value = false;
+                loadMonthData();
+              }
+            })
+            .catch((err) => {
+              isSettingUp.value = false;
+              error.value = "การเชื่อมต่อฐานข้อมูลล้มเหลว: " + err.message;
+            });
+        };
+        
+        const loadMonthData = () => {
+          if (!spreadsheetId.value || isSettingUp.value) return;
+          isLoadingData.value = true;
+          error.value = null;
+
+          // 1. Fetch Shifts first so the calendar renders immediately!
+          gasFetch('fetchDutyRoster', {spreadsheetId: spreadsheetId.value, }, userEmail.value)
+            .then((fetchedShifts) => {
+              shifts.value = fetchedShifts;
+              // Release the loading lock! Calendar is ready for interaction!
+              isLoadingData.value = false;
+              
+              // 2. Fetch Holiday Overrides in background
+              gasFetch('fetchCustomHolidays', {spreadsheetId: spreadsheetId.value, }, userEmail.value)
+                .then((fetchedHolidays) => {
+                  customHolidays.value = fetchedHolidays;
+                })
+                .catch((err) => console.warn('Background holiday error', err));
+
+              // 3. Fetch Album records in background
+              gasFetch('fetchMonthlyImages', {spreadsheetId: spreadsheetId.value, }, userEmail.value)
+                .then((fetchedImages) => {
+                  images.value = fetchedImages;
+                  // Pre-load thumbnails asynchronously
+                  fetchedImages.forEach((img) => {
+                    if (img.month === currentMonthStr.value) {
+                      lazyLoadImage(img.driveFileId);
+                    }
+                  });
+                })
+                .catch((err) => console.warn('Background album error', err));
+
+            })
+            .catch((err) => {
+              error.value = "เกิดข้อผิดพลาดในการดึงตารางเวร: " + err.message;
+              isLoadingData.value = false;
+            });
+        };
+
+        // Save new Roster shifts
+        const handleSaveRosterShifts = () => {
+          if (selectedDates.value.length === 0) return;
+
+          isSavingData.value = true;
+          error.value = null;
+
+          const newShifts = [];
+          selectedDates.value.forEach((dateStr) => {
+            if (rosterForm.shiftType === 'morning' || rosterForm.shiftType === 'both') {
+              newShifts.push({
+                date: dateStr,
+                shiftType: 'morning',
+                staffName: rosterForm.staffName.trim() || 'มีเวร',
+                notes: rosterForm.notes.trim() || ''
+              });
+            }
+            if (rosterForm.shiftType === 'afternoon' || rosterForm.shiftType === 'both') {
+              newShifts.push({
+                date: dateStr,
+                shiftType: 'afternoon',
+                staffName: rosterForm.staffName.trim() || 'มีเวร',
+                notes: rosterForm.notes.trim() || ''
+              });
+            }
+          });
+
+          
+
+          // Calculate the final state for the target dates
+          let updatedShifts = [...shifts.value];
+          selectedDates.value.forEach(d => {
+             updatedShifts = updatedShifts.filter(s => !(s.date === d && (rosterForm.shiftType === 'both' || s.shiftType === rosterForm.shiftType)));
+          });
+          const finalShifts = [...updatedShifts, ...newShifts];
+          const shiftsToSend = finalShifts.filter(s => selectedDates.value.includes(s.date));
+
+          gasFetch('saveDutyShifts', {spreadsheetId: spreadsheetId.value, shifts: shiftsToSend, targetDates: selectedDates.value, }, userEmail.value)
+            .then(() => {
+              isSavingData.value = false;
+              isRosterModalOpen.value = false;
+              selectedDates.value = [];
+              showToast("บันทึกข้อมูลตารางเวร เรียบร้อยแล้ว!");
+              shifts.value = finalShifts;
+            })
+            .catch((err) => {
+              isSavingData.value = false;
+              error.value = "ไม่สามารถบันทึกข้อมูลตารางเวรได้: " + err.message;
+            });
+        };
+
+        // Quick delete an individual shift on the cell hover controls
+        const handleDeleteShift = (dayNum, shiftType) => {
+          const dateStr = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+          const label = shiftType === 'morning' ? 'เวรเช้า' : 'เวรบ่าย';
+          
+          if (!confirm(`คุณต้องการลบ ${label} วันที่ ${formatDateStrThai(dateStr)} หรือไม่?`)) return;
+
+          isSavingData.value = true;
+
+          const updatedList = shifts.value.filter((s) => !(s.date === dateStr && s.shiftType === shiftType));
+
+          
+
+          const shiftsToSend = updatedList.filter(s => s.date === dateStr);
+          gasFetch('saveDutyShifts', {spreadsheetId: spreadsheetId.value, shifts: shiftsToSend, targetDates: [dateStr], }, userEmail.value)
+            .then(() => {
+              isSavingData.value = false;
+              showToast("ลบเวรเรียบร้อยแล้ว!");
+              shifts.value = updatedList; // Update local state directly
+            })
+            .catch((err) => {
+              isSavingData.value = false;
+              error.value = "ไม่สามารถลบตารางเวรที่ต้องการได้: " + err.message;
+            });
+        };
+
+        // Quick edit notes from calendar cell controls directly
+        const handleQuickEditShift = (dayNum, shiftType, currentVal) => {
+          const dateStr = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+          const label = shiftType === 'morning' ? 'เวรเช้า' : 'เวรบ่าย';
+          const newNotes = prompt(`แก้ไขหมายเหตุเวร (${label} วันที่ ${formatDateStrThai(dateStr)}):`, currentVal || '');
+          
+          if (newNotes === null) return; // User cancelled
+
+          isSavingData.value = true;
+
+          const updatedList = shifts.value.map((s) => {
+            if (s.date === dateStr && s.shiftType === shiftType) {
+              return { ...s, notes: newNotes.trim() };
+            }
+            return s;
+          });
+
+          
+
+          const shiftsToSend = updatedList.filter(s => s.date === dateStr);
+          gasFetch('saveDutyShifts', {spreadsheetId: spreadsheetId.value, shifts: shiftsToSend, targetDates: [dateStr], }, userEmail.value)
+            .then(() => {
+              isSavingData.value = false;
+              showToast("อัปเดตหมายเหตุสำเร็จ!");
+              shifts.value = updatedList; // Update local state directly
+            })
+            .catch((err) => {
+              isSavingData.value = false;
+              error.value = "ไม่สามารถอัปเดตหมายเหตุได้: " + err.message;
+            });
+        };
+
+        // Holidays Form compilation logic (populates dynamically when modal is opened)
+        const holidayFormDays = ref([]);
+
+        watch(isHolidayModalOpen, (isOpen) => {
+          if (!isOpen) return;
+          
+          const daysInMonth = new Date(currentYear.value, currentMonth.value, 0).getDate();
+          const list = [];
+          
+          const defaultHolidays = getThaiHolidaysForMonth(currentYear.value, currentMonth.value);
+
+          for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const override = customHolidays.value.find(ch => ch.date === dateStr);
+            const isWeekendDay = isWeekend(dateStr);
+            const defaultGov = defaultHolidays.find(gh => gh.date === dateStr);
+
+            let isHolidayState = isWeekendDay || !!defaultGov;
+            let holidayName = '';
+
+            if (override) {
+              isHolidayState = override.isHoliday;
+              holidayName = override.name;
+            } else if (defaultGov) {
+              holidayName = defaultGov.name;
+            }
+
+            list.push({
+              date: dateStr,
+              day: d,
+              isHoliday: isHolidayState,
+              name: holidayName,
+              defaultHolidayName: defaultGov ? defaultGov.name : (isWeekendDay ? 'วันหยุดสุดสัปดาห์' : '')
+            });
+          }
+          holidayFormDays.value = list;
+        });
+
+        // Save customized holiday list
+        const handleSaveHolidaySettings = () => {
+          isSavingData.value = true;
+          error.value = null;
+
+          const updatedHolidaysList = holidayFormDays.value.map(dayObj => ({
+            date: dayObj.date,
+            name: dayObj.name.trim(),
+            isHoliday: dayObj.isHoliday
+          }));
+
+          
+
+          gasFetch('saveCustomHolidays', {spreadsheetId: spreadsheetId.value, holidays: updatedHolidaysList, }, userEmail.value)
+            .then(() => {
+              isSavingData.value = false;
+              isHolidayModalOpen.value = false;
+              showToast("ปรับแต่งข้อมูล วันปฏิบัติงาน/วันหยุด สำเร็จแล้ว!");
+              // Update local state directly
+              const updatedHolidaysListFull = holidayFormDays.value.map(dayObj => ({
+                date: dayObj.date,
+                name: dayObj.name.trim(),
+                isHoliday: dayObj.isHoliday
+              }));
+              
+              // Merge with existing holidays for other months
+              const currentMonthPrefix = `${currentYear.value}-${String(currentMonth.value).padStart(2, '0')}`;
+              const otherMonthsHolidays = customHolidays.value.filter(h => !h.date.startsWith(currentMonthPrefix));
+              customHolidays.value = [...otherMonthsHolidays, ...updatedHolidaysListFull];
+            })
+            .catch((err) => {
+              isSavingData.value = false;
+              error.value = "ไม่สามารถบันทึกวันหยุดได้: " + err.message;
+            });
+        };
+
+        // Lazy image loader from Drive
+        const lazyLoadImage = (driveFileId) => {
+          if (imageBlobUrls.value[driveFileId]) return;
+
+          
+
+          // Fetch base64 from server to avoid third-party cookie restrictions in iframes
+          gasFetch('fetchImageBase64', {driveFileId: driveFileId, }, userEmail.value)
+            .then((base64String) => {
+              imageBlobUrls.value[driveFileId] = base64String;
+            })
+            .catch((err) => {
+              console.error("Failed to load image " + driveFileId + ": " + err.message);
+            });
+        };
+
+        // Drag & drop file actions
+        const onDragOver = (e) => {
+          e.preventDefault();
+          isDragging.value = true;
+        };
+
+        const onDragLeave = () => {
+          isDragging.value = false;
+        };
+
+        const onDrop = (e) => {
+          e.preventDefault();
+          isDragging.value = false;
+          const files = e.dataTransfer.files;
+          if (files.length > 0) {
+            handleImageUpload(files[0]);
+          }
+        };
+
+        const onFileChange = (e) => {
+          const files = e.target.files;
+          if (files.length > 0) {
+            handleImageUpload(files[0]);
+          }
+        };
+
+        const handleImageUpload = (file) => {
+          if (!file.type.startsWith('image/')) {
+            alert('กรุณาเลือกไฟล์รูปภาพเท่านั้น!');
+            return;
+          }
+          if (file.size > 10 * 1024 * 1024) {
+            alert('ไฟล์รูปภาพต้องมีขนาดไม่เกิน 10MB!');
+            return;
+          }
+
+          isUploading.value = true;
+          error.value = null;
+
+          const reader = new FileReader();
+          reader.onload = (evt) => {
+            const dataUrl = evt.target.result;
+            const base64 = dataUrl.split(',')[1];
+            const mimeType = file.type;
+            const fileName = file.name;
+
+            
+
+            gasFetch('uploadMonthlyImage', {spreadsheetId: spreadsheetId.value, folderId: folderId.value, month: currentMonthStr.value, base64Data: base64, fileName: fileName, mimeType: mimeType, }, userEmail.value)
+            .then((newImageObj) => {
+                isUploading.value = false;
+                showToast("อัปโหลดไฟล์ภาพไปยัง Google Drive เรียบร้อย!");
+                // Add base64 data to memory to show immediately
+                imageBlobUrls.value[newImageObj.driveFileId] = dataUrl;
+                // Add to list and refresh locally
+                images.value.push(newImageObj);
+              })
+            .catch((err) => {
+                isUploading.value = false;
+                error.value = "เกิดความผิดพลาดในการอัปโหลดรูปภาพ: " + err.message;
+              });
+          };
+
+          reader.readAsDataURL(file);
+        };
+
+        // Delete Image
+        const handleDeleteImage = (driveFileId) => {
+          if (!confirm("คุณต้องการลบรูปภาพนี้ออกจากระบบและ Google Drive อย่างถาวรใช่หรือไม่?")) return;
+
+          error.value = null;
+
+          
+
+          gasFetch('deleteMonthlyImage', {spreadsheetId: spreadsheetId.value, driveFileId: driveFileId, }, userEmail.value)
+            .then(() => {
+              showToast("ลบรูปภาพและเอกสารเรียบร้อยแล้ว!");
+              delete imageBlobUrls.value[driveFileId];
+              images.value = images.value.filter(img => img.driveFileId !== driveFileId);
+            })
+            .catch((err) => {
+              error.value = "ไม่สามารถลบไฟล์ภาพนี้ได้: " + err.message;
+            });
+        };
+
+        // Preview document lightbox
+        const openPreview = (driveFileId) => {
+          if (imageBlobUrls.value[driveFileId]) {
+            previewImageUrl.value = driveFileId;
+            isPreviewOpen.value = true;
+          }
+        };
+
+        // Toast Helper
+        const showToast = (msg) => {
+          statusMessage.value = msg;
+          setTimeout(() => {
+            if (statusMessage.value === msg) {
+              statusMessage.value = null;
+            }
+          }, 4500);
+        };
+
+        // Save Calendar as Image
+        const handleDownloadImage = async () => {
+          const calendarElement = document.getElementById('calendar-view');
+          if (!calendarElement) return;
+
+          const isDark = document.documentElement.classList.contains('dark');
+          
+          // Temporarily add export-mode class to remove all box-shadows which render poorly
+          calendarElement.classList.add('export-mode');
+          
+          // Wait a brief moment to ensure browser applies CSS before cloning
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+          htmlToImage.toBlob(calendarElement, {
+            pixelRatio: 3, // High scale for crisp text and sharpness
+            backgroundColor: isDark ? '#0f172a' : '#ffffff',
+            style: {
+              margin: '0',
+            },
+            cacheBust: true,
+          }).then(async blob => {
+            // Restore immediately
+            calendarElement.classList.remove('export-mode');
+            
+            if (!blob) {
+              alert('เกิดข้อผิดพลาดในการสร้างรูปภาพ');
+              return;
+            }
+
+            const fileName = `ตารางเวร_${getThaiMonthName(currentMonth.value)}_${currentYear.value + 543}.png`;
+
+            // Check if Web Share API is supported
+            if (navigator.share && navigator.canShare) {
+              try {
+                const file = new File([blob], fileName, { type: 'image/png' });
+                if (navigator.canShare({ files: [file] })) {
+                  await navigator.share({
+                    files: [file],
+                    title: fileName,
+                  });
+                  return; // Success
+                }
+              } catch (shareErr) {
+                console.log('Share failed or cancelled', shareErr);
+                if (shareErr.name === 'AbortError') return;
+              }
+            }
+
+            // Standard download fallback
+            const dataUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(dataUrl), 100);
+            showToast("สร้างภาพตารางเวรเรียบร้อยแล้ว!");
+          }).catch(err => {
+            calendarElement.classList.remove('export-mode');
+            console.error('Failed to export image', err);
+            showToast("เกิดข้อผิดพลาดในการสร้างภาพ");
+          });
+        };
+
+        // Initialize App on mount
+        onMounted(() => {
+          applyTheme();
+          
+          // Check local storage for session
+          const pondToken = localStorage.getItem('pond_ai_token');
+          if (!pondToken) {
+              window.location.href = 'index.html';
+              return;
+          }
+          userEmail.value = 'wisut.pond@gmail.com';
+          userName.value = 'Pond';
+          userProfilePic.value = '';
+          isLoggedIn.value = true;
+          initDatabase();
+          
+          window.handleCredentialResponse = (response) => {};
+        });
+        
+        const signOut = () => {
+    window.location.href = 'index.html';
+};
+
+
+        return {
+          userEmail,
+          spreadsheetId,
+          folderId,
+          isLoggedIn,
+          userName,
+          userProfilePic,
+          signOut,
+          isSettingUp,
+          setupStatus,
+          currentYear,
+          currentMonth,
+          shifts,
+          customHolidays,
+          images,
+          selectedDates,
+          sortedSelectedDates,
+          imageBlobUrls,
+          isDragging,
+          isUploading,
+          isRosterModalOpen,
+          isHolidayModalOpen,
+          isImageManagerOpen,
+          isPreviewOpen,
+          previewImageUrl,
+          isLoadingData,
+          isSavingData,
+          error,
+          statusMessage,
+          rosterForm,
+          theme,
+          setTheme,
+          daysArray,
+          activeHolidaysList,
+          currentMonthImages,
+          holidayFormDays,
+          getDayHolidayInfo,
+          getShiftsForDay,
+          isDateSelected,
+          handleToggleDate,
+          removeSelectedDate,
+          selectAllWeekdays,
+          selectAllWeekends,
+          clearSelectedDates,
+          handlePrevMonth,
+          handleNextMonth,
+          handleCreateNextMonth,
+          getThaiMonthName,
+          formatDateStrThai,
+          formatDateLabelThai,
+          formatDateThai,
+          handleSaveRosterShifts,
+          handleDeleteShift,
+          handleQuickEditShift,
+          handleSaveHolidaySettings,
+          onDragOver,
+          onDragLeave,
+          onDrop,
+          onFileChange,
+          handleDeleteImage,
+          openPreview,
+          handleDownloadImage
+        };
+      }
+    }).mount('#app');
+  </script>
+
+
+
+<style id="ios-zoom-fix">
+/* Prevent iOS Safari from zooming in on input fields */
+@media screen and (max-width: 768px) {
+    input[type="text"], input[type="number"], input[type="date"], input[type="email"], input[type="password"], input[type="tel"], select, textarea {
+        font-size: 16px !important;
+    }
+}
+</style>
+
+
+
+<style id="page-enter-anim">
+@keyframes pageEnter {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+html { background: #fff; }
+body {
+  opacity: 0;
+  animation: pageEnter 0.25s ease 0.05s forwards;
+}
+</style>
+
+<style id="hide-logout-style">
+/* Hide logout buttons */
+[title*="ออกจากระบบ"], #logout-button, #logoutBtn, button:has(svg.lucide-log-out) { display: none !important; }
+</style>
+</body>
+</html>
