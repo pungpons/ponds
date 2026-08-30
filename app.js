@@ -111,6 +111,7 @@ let myApps = [
     { id: 3, name: 'UOB', url: 'uob.html', lightGradient: 'linear-gradient(135deg, #2b4b8a, #3b6ba8)', darkGradient: 'linear-gradient(135deg, #1d3566, #2b5182)', icon: 'U' },
     { id: 4, name: 'Duty', url: 'duty.html', lightGradient: 'linear-gradient(135deg, #c8b6ff, #ffb6c1)', darkGradient: 'linear-gradient(135deg, #9281c7, #bf828b)', icon: 'D' },
     { id: 5, name: 'Dollar', url: 'dollar.html', lightGradient: 'linear-gradient(135deg, #34f08c, #34e0a1)', darkGradient: 'linear-gradient(135deg, #21ba68, #21ad79)', icon: 'D' },
+    { id: 6, name: 'Pharma', url: 'pharmadash.html', lightGradient: 'linear-gradient(135deg, #ff9a9e, #fecfef)', darkGradient: 'linear-gradient(135deg, #c7565b, #b57a9e)', icon: 'P' },
 ];
 
 let isEditMode = false;
@@ -120,7 +121,7 @@ let cloudConfigFileId = null;
 
 async function loadAppsFromCloud(token) {
     try {
-        const searchRes = await fetch("https://www.googleapis.com/drive/v3/files?q=name='pond_ai_config.json' and trashed=false", {
+        const searchRes = await fetch("https://www.googleapis.com/drive/v3/files?q=" + encodeURIComponent("name='pond_ai_config.json' and trashed=false"), {
             headers: { Authorization: `Bearer ${token}` }
         });
         const searchData = await searchRes.json();
