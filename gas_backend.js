@@ -7,6 +7,9 @@
     // UI Logic for index.html lock screen
     const ALLOWED_EMAILS = ['wisut.pond@gmail.com', 'pungpons@gmail.com'];
     let userEmail = localStorage.getItem('pond_user_email');
+    if (userEmail && !localStorage.getItem('pond_ai_token')) {
+        localStorage.setItem('pond_ai_token', 'gas-proxy-token');
+    }
     
     // Global callback for Google Sign-In
     window.handleCredentialResponse = (response) => {
@@ -22,6 +25,7 @@
             if (ALLOWED_EMAILS.includes(payload.email) || ALLOWED_EMAILS.length === 0) {
                 localStorage.setItem('pond_user_email', payload.email);
                 localStorage.setItem('user_email', payload.email);
+                localStorage.setItem('pond_ai_token', 'gas-proxy-token');
                 window.location.reload();
             } else {
                 const errorMsg = document.getElementById('loginErrorMsg');
@@ -61,6 +65,7 @@
                 e.stopPropagation();
                 if(confirm('Sign out?')) {
                     localStorage.removeItem('pond_user_email');
+                    localStorage.removeItem('pond_ai_token');
                     window.location.href = 'index.html';
                 }
             });
