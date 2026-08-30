@@ -168,7 +168,18 @@
         
         if (data.error) throw new Error(data.error);
 
-        return new Response(data.body, {
+        let finalBody = data.body;
+        if (typeof finalBody === 'string' && finalBody.startsWith('__BASE64__')) {
+            const b64 = finalBody.substring(10);
+            const byteCharacters = atob(b64);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            finalBody = new Uint8Array(byteNumbers);
+        }
+
+        return new Response(finalBody, {
             status: data.status,
             headers: data.headers || {}
         });

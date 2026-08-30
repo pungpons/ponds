@@ -1041,9 +1041,13 @@
             }
             
             if (action === 'fetchImageBase64') {
-                // By returning a public thumbnail URL, the browser loads it directly, bypassing CORS/Auth issues 
-                // and making the app significantly faster!
-                return `https://drive.google.com/thumbnail?id=${payload.driveFileId}&sz=w1000`;
+                const token = localStorage.getItem('pond_ai_token');
+                const res = await fetch(`https://www.googleapis.com/drive/v3/files/${payload.driveFileId}?alt=media`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error("Failed to fetch image");
+                const blob = await res.blob();
+                return URL.createObjectURL(blob);
             }
 
             throw new Error('Unknown action: ' + action);

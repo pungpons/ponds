@@ -34,10 +34,20 @@ function doPost(e) {
 
     const response = UrlFetchApp.fetch(targetUrl, options);
     
+    const headersStr = JSON.stringify(response.getAllHeaders() || {}).toLowerCase();
+    let bodyData = "";
+    if (headersStr.includes('image/') || headersStr.includes('application/pdf')) {
+      bodyData = Utilities.base64Encode(response.getBlob().getBytes());
+      // Prepend a flag so the frontend knows it's base64 encoded binary
+      bodyData = "__BASE64__" + bodyData;
+    } else {
+      bodyData = response.getContentText();
+    }
+    
     return ContentService.createTextOutput(JSON.stringify({
       status: response.getResponseCode(),
       headers: response.getAllHeaders(),
-      body: response.getContentText()
+      body: bodyData
     })).setMimeType(ContentService.MimeType.JSON);
     
   } catch (err) {
