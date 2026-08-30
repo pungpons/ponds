@@ -136,11 +136,13 @@
                 }
             } 
             else {
-                const bgSync = async () => {
-                    try { await callGas(url, options, gasUrl); } catch(e) {}
-                };
-                bgSync();
-                return new Response(JSON.stringify({}), { status: 200, statusText: 'OK', headers: {'Content-Type': 'application/json'} });
+                // For non-GET requests (save, update, delete), we MUST wait for the real response.
+                // Otherwise the UI receives empty data and shows blank fields until next refresh.
+                const res = await callGas(url, options, gasUrl);
+                
+                // Optional: after a successful save, we could clear the GET caches related to this API 
+                // to force a fresh fetch next time, but for now we just return the real response.
+                return res;
             }
         }
         return originalFetch.apply(this, args);
