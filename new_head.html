@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script src="gas_backend.js"></script>
+
+
+
+<script>
+// SSO from POND AI
+const pondToken = localStorage.getItem('pond_ai_token');
+if (pondToken) {
+    localStorage.setItem('google_user_email', 'wisut.pond@gmail.com');
+    localStorage.setItem('google_user', JSON.stringify({
+        email: 'wisut.pond@gmail.com',
+        name: 'Wisut'
+    }));
+    localStorage.setItem('google_access_token', pondToken);
+    
+    const originalFetch = window.fetch;
+    window.fetch = async function(url, options) {
+        const urlStr = url.toString();
+        // Override headers just in case it uses an expired token
+        if (urlStr.includes('googleapis.com')) {
+            options = options || {};
+            if (options.headers instanceof Headers) {
+                options.headers.set('Authorization', 'Bearer ' + pondToken);
+            } else {
+                options.headers = options.headers || {};
+                options.headers['Authorization'] = 'Bearer ' + pondToken;
+            }
+        }
+        
+        // Mock getGasOAuthToken and set_cached_spreadsheet equivalents
+        if (urlStr.includes('script.google.com')) {
+            const body = options.body && typeof options.body === 'string' ? JSON.parse(options.body) : {};
+            if (body.action === 'getGasOAuthToken') {
+                return new Response(JSON.stringify({ status: 'success', data: pondToken }), { status: 200 });
+            }
+            if (body.action === 'getActiveSpreadsheetId') {
+                return new Response(JSON.stringify({ status: 'success', data: null }), { status: 200 });
+            }
+            if (body.action === 'getUserInfo') {
+                const userEmail = body.user_email || 'wisut.pond@gmail.com';
+                return new Response(JSON.stringify({ status: 'success', data: { email: userEmail, name: userEmail.split('@')[0] } }), { status: 200 });
+            }
+        }
+        return originalFetch(url, options);
+    };
+
+    window.google = window.google || {};

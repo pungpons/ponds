@@ -73,7 +73,18 @@
       opacity: 0;
       transform: scale(0.95);
     }
-  </style>
+  
+@media print {
+    body, html, #root, #root > div, main {
+        height: auto !important;
+        min-height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        position: static !important;
+        display: block !important;
+    }
+}
+</style>
 <script src="https://accounts.google.com/gsi/client" async defer></script></head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200">
   <div id="app" >
