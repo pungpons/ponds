@@ -39,6 +39,16 @@
         }
     };
 
+
+    // Register Service Worker for Instant Page Loads
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js').catch(err => {
+                console.log('SW registration failed: ', err);
+            });
+        });
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
         const lockScreen = document.getElementById('lockScreen');
         const loginBtn = document.getElementById('loginBtn'); // Sign out button
