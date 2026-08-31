@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="bg-slate-50 dark:bg-[#0f172a]">
+<html lang="en" class="theme-enabled">
 <head>
     <script src="gas_backend.js"></script>
     <meta charset="UTF-8">
@@ -42,10 +42,11 @@
         (function() {
             try {
                 var theme = localStorage.getItem('theme');
+                var colorTheme = localStorage.getItem('pond_color_theme');
+                if (colorTheme) document.documentElement.setAttribute('data-theme', colorTheme);
                 var isDark = theme === 'dark' || (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches) || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches);
                 if (isDark) {
                     document.documentElement.classList.add('dark');
-                    document.querySelectorAll('meta[name="theme-color"]').forEach(function(m) { m.setAttribute('content', '#0f172a'); });
                 }
             } catch (e) {}
         })();
@@ -86,23 +87,14 @@
 
     <!-- Sticky Header -->
     <header class="flex justify-between items-center px-6 pt-safe-top pb-4 mt-6 z-50">
-        <div class="bg-gradient-to-br from-blue-600 to-indigo-700 dark:from-[#1e3a8a] dark:to-[#312e81] text-white font-bold text-lg px-6 py-2.5 rounded-xl shadow-[0_8px_16px_rgb(59_130_246/0.3)] dark:shadow-[0_8px_16px_rgb(0_0_0/0.4)] tracking-wider transition-colors duration-500 ease-apple cursor-pointer active:scale-95" onclick="window.location.reload()">
+        <div class="theme-header-bg text-white font-bold text-lg px-6 py-2.5 rounded-xl shadow-[0_8px_16px_rgb(59_130_246/0.3)] dark:shadow-[0_8px_16px_rgb(0_0_0/0.4)] tracking-wider transition-colors duration-500 ease-apple cursor-pointer active:scale-95" onclick="window.location.reload()">
             POND
         </div>
         <div class="flex items-center gap-3">
-            
-            <!-- Theme Toggle -->
-            <button id="themeToggle" class="w-10 h-10 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 text-ios-text dark:text-ios-darkText backdrop-blur-md transition-all duration-500 ease-apple active:scale-90 active:opacity-70 hover:scale-105" title="Toggle Theme">
-                <svg id="themeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            <!-- Settings Button -->
+            <button id="settingsBtn" class="w-10 h-10 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 text-ios-text dark:text-ios-darkText backdrop-blur-md transition-all duration-500 ease-apple active:scale-90 active:opacity-70 hover:scale-105" title="Settings">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
             </button>
-            <!-- Sign Out -->
-            <div id="authButtonContainer">
-                <button id="loginBtn" class="w-10 h-10 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 text-ios-text dark:text-ios-darkText backdrop-blur-md transition-all duration-500 ease-apple active:scale-90 active:opacity-70 hover:scale-105 hidden" title="Sign Out">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                    </svg>
-                </button>
-            </div>
         </div>
     </header>
 
@@ -166,6 +158,60 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Settings Modal Overlay -->
+  <div id="settings-modal" class="fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-md z-[200] hidden items-center justify-center p-4 transition-colors duration-500">
+    <div class="backdrop-blur-xl bg-white/90 dark:bg-[#0f172a]/90 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all border border-black/10 dark:border-white/10">
+      <div class="p-6">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-xl font-bold tracking-tight text-slate-800 dark:text-white">Settings</h3>
+          <button id="close-settings-btn" class="text-slate-500 hover:text-slate-800 dark:text-white/40 dark:hover:text-white transition-colors bg-black/5 hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10 p-2 rounded-full">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+        
+        <div class="space-y-6">
+          <!-- Display Mode -->
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-white/50 mb-3">Display Mode</label>
+            <div class="flex bg-black/5 dark:bg-white/5 p-1 rounded-xl">
+              <button id="btn-theme-light" class="flex-1 py-2 text-sm font-medium rounded-lg transition-all text-slate-600 dark:text-white/60 hover:text-slate-900 dark:hover:text-white">Light</button>
+              <button id="btn-theme-dark" class="flex-1 py-2 text-sm font-medium rounded-lg transition-all text-slate-600 dark:text-white/60 hover:text-slate-900 dark:hover:text-white">Dark</button>
+              <button id="btn-theme-auto" class="flex-1 py-2 text-sm font-medium rounded-lg transition-all text-slate-600 dark:text-white/60 hover:text-slate-900 dark:hover:text-white">Auto</button>
+            </div>
+          </div>
+          
+          <!-- Themes -->
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-white/50 mb-3">Color Theme</label>
+            <div class="grid grid-cols-5 gap-3" id="theme-swatches">
+                <button data-set-theme="default" class="w-10 h-10 rounded-full bg-blue-500 border-2 border-transparent focus:border-white shadow-sm transition-transform active:scale-90" title="Default"></button>
+                <button data-set-theme="ocean" class="w-10 h-10 rounded-full bg-teal-500 border-2 border-transparent focus:border-white shadow-sm transition-transform active:scale-90" title="Ocean"></button>
+                <button data-set-theme="forest" class="w-10 h-10 rounded-full bg-emerald-500 border-2 border-transparent focus:border-white shadow-sm transition-transform active:scale-90" title="Forest"></button>
+                <button data-set-theme="sunset" class="w-10 h-10 rounded-full bg-orange-500 border-2 border-transparent focus:border-white shadow-sm transition-transform active:scale-90" title="Sunset"></button>
+                <button data-set-theme="lavender" class="w-10 h-10 rounded-full bg-purple-500 border-2 border-transparent focus:border-white shadow-sm transition-transform active:scale-90" title="Lavender"></button>
+                <button data-set-theme="ruby" class="w-10 h-10 rounded-full bg-red-600 border-2 border-transparent focus:border-white shadow-sm transition-transform active:scale-90" title="Ruby"></button>
+                <button data-set-theme="amber" class="w-10 h-10 rounded-full bg-amber-500 border-2 border-transparent focus:border-white shadow-sm transition-transform active:scale-90" title="Amber"></button>
+                <button data-set-theme="mint" class="w-10 h-10 rounded-full bg-green-500 border-2 border-transparent focus:border-white shadow-sm transition-transform active:scale-90" title="Mint"></button>
+                <button data-set-theme="mono" class="w-10 h-10 rounded-full bg-zinc-600 border-2 border-transparent focus:border-white shadow-sm transition-transform active:scale-90" title="Monochrome"></button>
+                <button data-set-theme="midnight" class="w-10 h-10 rounded-full bg-slate-800 border-2 border-transparent focus:border-white shadow-sm transition-transform active:scale-90" title="Midnight"></button>
+            </div>
+          </div>
+          
+          <hr class="border-black/5 dark:border-white/5">
+          
+          <!-- Logout -->
+          <div>
+            <button id="settingsLogoutBtn" class="w-full py-3 px-4 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-500/10 dark:hover:bg-red-500/20 dark:text-red-400 rounded-xl font-semibold transition-all active:scale-[0.98] flex items-center justify-center gap-2 hidden">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+              Sign Out
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

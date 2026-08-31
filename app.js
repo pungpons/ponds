@@ -1,73 +1,155 @@
-// --- Theme Management ---
-const THEMES = ['auto', 'light', 'dark'];
-let currentThemeIndex = 0;
-const themeToggle = document.getElementById('themeToggle');
-const themeIcon = document.getElementById('themeIcon');
+// --- Settings & Theme Management ---
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsModal = document.getElementById('settings-modal');
+const closeSettingsBtn = document.getElementById('close-settings-btn');
+const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
 const themeMeta = document.getElementById('theme-color-meta');
 
-function applyTheme(themeType, isInit = false, skipRender = false) {
-    let isDark = false;
-    
-    if (themeType === 'auto') {
-        isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        themeIcon.innerHTML = '<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" fill="none"></circle><path d="M12 3a9 9 0 0 1 0 18Z" fill="currentColor"></path>';
-    } else if (themeType === 'dark') {
-        isDark = true;
-        themeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>';
-    } else {
-        isDark = false;
-        themeIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>';
-    }
+// Display Mode logic
+const THEMES = ['auto', 'light', 'dark'];
+let currentDisplayMode = localStorage.getItem('theme') || 'auto';
 
-    const wasDark = document.documentElement.classList.contains('dark');
+function updateDisplayModeButtons() {
+    ['light', 'dark', 'auto'].forEach(mode => {
+        const btn = document.getElementById('btn-theme-' + mode);
+        if (!btn) return;
+        if (mode === currentDisplayMode) {
+            btn.classList.add('bg-white', 'dark:bg-slate-700', 'shadow-sm', 'text-indigo-600', 'dark:text-indigo-400');
+            btn.classList.remove('text-slate-600', 'dark:text-white/60');
+        } else {
+            btn.classList.remove('bg-white', 'dark:bg-slate-700', 'shadow-sm', 'text-indigo-600', 'dark:text-indigo-400');
+            btn.classList.add('text-slate-600', 'dark:text-white/60');
+        }
+    });
+}
+
+function applyDisplayMode(mode, isInit = false) {
+    let isDark = false;
+    if (mode === 'auto') {
+        isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    } else {
+        isDark = mode === 'dark';
+    }
 
     if (isDark) {
         document.documentElement.classList.add('dark');
-        if (themeMeta) themeMeta.setAttribute('content', '#0f172a');
-        document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.setAttribute('content', '#0f172a'));
+        updateMetaThemeColor();
     } else {
         document.documentElement.classList.remove('dark');
-        if (themeMeta) themeMeta.setAttribute('content', '#f8fafc');
-        document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.setAttribute('content', '#f8fafc'));
+        updateMetaThemeColor();
     }
-
 
     if (!isInit) {
-        localStorage.setItem('theme', themeType);
-    }
-
-    const isDarkNow = document.documentElement.classList.contains('dark');
-    if (wasDark !== isDarkNow && typeof renderApps === 'function' && !skipRender) {
-        renderApps();
+        localStorage.setItem('theme', mode);
+        currentDisplayMode = mode;
+        updateDisplayModeButtons();
+        if (typeof renderApps === 'function') renderApps();
     }
 }
 
-// Listen for system theme changes if in auto mode
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-    if (THEMES[currentThemeIndex] === 'auto') {
-        applyTheme('auto', true);
+// Color Theme Logic
+let currentColorTheme = localStorage.getItem('pond_color_theme') || 'default';
+
+function updateMetaThemeColor() {
+    setTimeout(() => {
+        const bgColor = getComputedStyle(document.documentElement).getPropertyValue('background-color');
+        if (bgColor) {
+            document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.setAttribute('content', bgColor));
+        }
+    }, 50);
+}
+
+function applyColorTheme(themeName) {
+    document.documentElement.setAttribute('data-theme', themeName);
+    localStorage.setItem('pond_color_theme', themeName);
+    currentColorTheme = themeName;
+    updateMetaThemeColor();
+    // Update active swatch state
+    document.querySelectorAll('[data-set-theme]').forEach(btn => {
+        if (btn.getAttribute('data-set-theme') === themeName) {
+            btn.classList.add('border-indigo-600', 'dark:border-white', 'scale-110');
+            btn.classList.remove('border-transparent');
+        } else {
+            btn.classList.remove('border-indigo-600', 'dark:border-white', 'scale-110');
+            btn.classList.add('border-transparent');
+        }
+    });
+}
+
+// Event Listeners for Display Mode
+['light', 'dark', 'auto'].forEach(mode => {
+    const btn = document.getElementById('btn-theme-' + mode);
+    if (btn) {
+        btn.addEventListener('click', () => applyDisplayMode(mode));
     }
 });
 
-// Initial Load
-let savedTheme = localStorage.getItem('theme') || 'auto';
-currentThemeIndex = THEMES.indexOf(savedTheme);
-if (currentThemeIndex === -1) currentThemeIndex = 0;
-applyTheme(THEMES[currentThemeIndex], true);
-
-themeToggle.addEventListener('click', () => {
-    currentThemeIndex = (currentThemeIndex + 1) % THEMES.length;
-    // Pass skipRender = true because we are reloading the page right after
-    applyTheme(THEMES[currentThemeIndex], false, true);
-    
-    // Force a reload as requested to ensure Safari status bar picks up the new theme
-    setTimeout(() => {
-        window.location.reload();
-    }, 50);
+// Event Listeners for Color Themes
+document.querySelectorAll('[data-set-theme]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        applyColorTheme(e.target.getAttribute('data-set-theme'));
+    });
 });
 
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    if (currentDisplayMode === 'auto') applyDisplayMode('auto', true);
+});
 
-// --- Apps Grid ---
+// Init Themes
+applyDisplayMode(currentDisplayMode, true);
+updateDisplayModeButtons();
+applyColorTheme(currentColorTheme);
+
+// Settings Modal Toggles
+if (settingsBtn) {
+    settingsBtn.addEventListener('click', () => {
+        settingsModal.classList.remove('hidden');
+        settingsModal.classList.add('flex');
+    });
+}
+if (closeSettingsBtn) {
+    closeSettingsBtn.addEventListener('click', () => {
+        settingsModal.classList.add('hidden');
+        settingsModal.classList.remove('flex');
+    });
+}
+// Close on outside click
+settingsModal.addEventListener('click', (e) => {
+    if (e.target === settingsModal) {
+        settingsModal.classList.add('hidden');
+        settingsModal.classList.remove('flex');
+    }
+});
+
+// Auth Logout Logic
+const pondToken = localStorage.getItem('pond_ai_token');
+if (pondToken && settingsLogoutBtn) {
+    settingsLogoutBtn.classList.remove('hidden');
+    settingsLogoutBtn.addEventListener('click', () => {
+        if (confirm('คุณต้องการออกจากระบบใช่หรือไม่?')) {
+            localStorage.removeItem('pond_ai_token');
+            localStorage.removeItem('google_user_email');
+            window.location.reload();
+        }
+    });
+}
+
+// Google Sign-In init
+window.onload = function () {
+    if (typeof google !== 'undefined') {
+        google.accounts.id.initialize({
+            client_id: "687258417937-2l06u8l73l0hsmf9570q88shd29s7i16.apps.googleusercontent.com",
+            // The callback is set by gas_backend.js globally on window
+        });
+        if (!localStorage.getItem('pond_ai_token')) {
+            google.accounts.id.renderButton(
+                document.querySelector(".g_id_signin"),
+                { theme: "outline", size: "large" }
+            );
+        }
+    }
+}
+
 const appsGrid = document.getElementById('appsGrid');
 let sortableInstance = null;
 

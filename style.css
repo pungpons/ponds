@@ -176,3 +176,129 @@ header {
     /* Use 'backwards' instead of 'both' so it doesn't lock the transform property after it finishes */
     animation: iconBloom 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) var(--bloom-delay, 0.1s) backwards;
 }
+
+/* Themes Definition */
+:root {
+    /* Theme 1: Default (Indigo) */
+    --theme-default-bg-light: #f8fafc;
+    --theme-default-bg-dark: #0f172a;
+    --theme-default-hdr-start-light: #2563eb; /* blue-600 */
+    --theme-default-hdr-end-light: #4338ca;   /* indigo-700 */
+    --theme-default-hdr-start-dark: #1e3a8a;  /* blue-900 */
+    --theme-default-hdr-end-dark: #312e81;    /* indigo-900 */
+
+    /* Theme 2: Ocean (Teal) */
+    --theme-ocean-bg-light: #f0fdfa;
+    --theme-ocean-bg-dark: #134e4a; /* teal-900 */
+    --theme-ocean-hdr-start-light: #0d9488; /* teal-600 */
+    --theme-ocean-hdr-end-light: #0369a1; /* sky-700 */
+    --theme-ocean-hdr-start-dark: #0f766e; /* teal-700 */
+    --theme-ocean-hdr-end-dark: #075985; /* sky-800 */
+
+    /* Theme 3: Forest (Emerald) */
+    --theme-forest-bg-light: #ecfdf5;
+    --theme-forest-bg-dark: #064e3b; /* emerald-900 */
+    --theme-forest-hdr-start-light: #059669; /* emerald-600 */
+    --theme-forest-hdr-end-light: #15803d; /* green-700 */
+    --theme-forest-hdr-start-dark: #047857; /* emerald-700 */
+    --theme-forest-hdr-end-dark: #166534; /* green-800 */
+
+    /* Theme 4: Sunset (Orange) */
+    --theme-sunset-bg-light: #fff7ed;
+    --theme-sunset-bg-dark: #7c2d12; /* orange-900 */
+    --theme-sunset-hdr-start-light: #ea580c; /* orange-600 */
+    --theme-sunset-hdr-end-light: #be123c; /* rose-700 */
+    --theme-sunset-hdr-start-dark: #c2410c; /* orange-700 */
+    --theme-sunset-hdr-end-dark: #9f1239; /* rose-800 */
+
+    /* Theme 5: Lavender (Purple) */
+    --theme-lavender-bg-light: #faf5ff;
+    --theme-lavender-bg-dark: #3b0764; /* purple-900 */
+    --theme-lavender-hdr-start-light: #9333ea; /* purple-600 */
+    --theme-lavender-hdr-end-light: #6d28d9; /* violet-700 */
+    --theme-lavender-hdr-start-dark: #7e22ce; /* purple-700 */
+    --theme-lavender-hdr-end-dark: #5b21b6; /* violet-800 */
+
+    /* Theme 6: Ruby (Red) */
+    --theme-ruby-bg-light: #fef2f2;
+    --theme-ruby-bg-dark: #450a0a; /* red-950 */
+    --theme-ruby-hdr-start-light: #dc2626; /* red-600 */
+    --theme-ruby-hdr-end-light: #9f1239; /* rose-700 */
+    --theme-ruby-hdr-start-dark: #b91c1c; /* red-700 */
+    --theme-ruby-hdr-end-dark: #881337; /* rose-800 */
+
+    /* Theme 7: Amber (Yellow/Gold) */
+    --theme-amber-bg-light: #fffbeb;
+    --theme-amber-bg-dark: #451a03; /* amber-950 */
+    --theme-amber-hdr-start-light: #d97706; /* amber-600 */
+    --theme-amber-hdr-end-light: #b45309; /* amber-700 */
+    --theme-amber-hdr-start-dark: #b45309; /* amber-700 */
+    --theme-amber-hdr-end-dark: #92400e; /* amber-800 */
+
+    /* Theme 8: Mint (Green) */
+    --theme-mint-bg-light: #f0fdf4;
+    --theme-mint-bg-dark: #14532d; /* green-900 */
+    --theme-mint-hdr-start-light: #16a34a; /* green-600 */
+    --theme-mint-hdr-end-light: #059669; /* emerald-600 */
+    --theme-mint-hdr-start-dark: #15803d; /* green-700 */
+    --theme-mint-hdr-end-dark: #047857; /* emerald-700 */
+
+    /* Theme 9: Monochrome (Zinc) */
+    --theme-mono-bg-light: #fafafa;
+    --theme-mono-bg-dark: #18181b; /* zinc-900 */
+    --theme-mono-hdr-start-light: #52525b; /* zinc-500 */
+    --theme-mono-hdr-end-light: #27272a; /* zinc-800 */
+    --theme-mono-hdr-start-dark: #27272a; /* zinc-800 */
+    --theme-mono-hdr-end-dark: #09090b; /* zinc-950 */
+
+    /* Theme 10: Midnight (Black/Slate) */
+    --theme-midnight-bg-light: #e2e8f0; /* slate-200 */
+    --theme-midnight-bg-dark: #020617; /* slate-950 */
+    --theme-midnight-hdr-start-light: #334155; /* slate-700 */
+    --theme-midnight-hdr-end-light: #0f172a; /* slate-900 */
+    --theme-midnight-hdr-start-dark: #0f172a; /* slate-900 */
+    --theme-midnight-hdr-end-dark: #000000; /* black */
+
+    /* Active Variables (Mapped to Default initially) */
+    --active-bg-light: var(--theme-default-bg-light);
+    --active-bg-dark: var(--theme-default-bg-dark);
+    --active-hdr-start-light: var(--theme-default-hdr-start-light);
+    --active-hdr-end-light: var(--theme-default-hdr-end-light);
+    --active-hdr-start-dark: var(--theme-default-hdr-start-dark);
+    --active-hdr-end-dark: var(--theme-default-hdr-end-dark);
+}
+
+/* Theme Mappers */
+html[data-theme="ocean"] {
+    --active-bg-light: var(--theme-ocean-bg-light);
+    --active-bg-dark: var(--theme-ocean-bg-dark);
+    --active-hdr-start-light: var(--theme-ocean-hdr-start-light);
+    --active-hdr-end-light: var(--theme-ocean-hdr-end-light);
+    --active-hdr-start-dark: var(--theme-ocean-hdr-start-dark);
+    --active-hdr-end-dark: var(--theme-ocean-hdr-end-dark);
+}
+html[data-theme="forest"] { --active-bg-light: var(--theme-forest-bg-light); --active-bg-dark: var(--theme-forest-bg-dark); --active-hdr-start-light: var(--theme-forest-hdr-start-light); --active-hdr-end-light: var(--theme-forest-hdr-end-light); --active-hdr-start-dark: var(--theme-forest-hdr-start-dark); --active-hdr-end-dark: var(--theme-forest-hdr-end-dark); }
+html[data-theme="sunset"] { --active-bg-light: var(--theme-sunset-bg-light); --active-bg-dark: var(--theme-sunset-bg-dark); --active-hdr-start-light: var(--theme-sunset-hdr-start-light); --active-hdr-end-light: var(--theme-sunset-hdr-end-light); --active-hdr-start-dark: var(--theme-sunset-hdr-start-dark); --active-hdr-end-dark: var(--theme-sunset-hdr-end-dark); }
+html[data-theme="lavender"] { --active-bg-light: var(--theme-lavender-bg-light); --active-bg-dark: var(--theme-lavender-bg-dark); --active-hdr-start-light: var(--theme-lavender-hdr-start-light); --active-hdr-end-light: var(--theme-lavender-hdr-end-light); --active-hdr-start-dark: var(--theme-lavender-hdr-start-dark); --active-hdr-end-dark: var(--theme-lavender-hdr-end-dark); }
+html[data-theme="ruby"] { --active-bg-light: var(--theme-ruby-bg-light); --active-bg-dark: var(--theme-ruby-bg-dark); --active-hdr-start-light: var(--theme-ruby-hdr-start-light); --active-hdr-end-light: var(--theme-ruby-hdr-end-light); --active-hdr-start-dark: var(--theme-ruby-hdr-start-dark); --active-hdr-end-dark: var(--theme-ruby-hdr-end-dark); }
+html[data-theme="amber"] { --active-bg-light: var(--theme-amber-bg-light); --active-bg-dark: var(--theme-amber-bg-dark); --active-hdr-start-light: var(--theme-amber-hdr-start-light); --active-hdr-end-light: var(--theme-amber-hdr-end-light); --active-hdr-start-dark: var(--theme-amber-hdr-start-dark); --active-hdr-end-dark: var(--theme-amber-hdr-end-dark); }
+html[data-theme="mint"] { --active-bg-light: var(--theme-mint-bg-light); --active-bg-dark: var(--theme-mint-bg-dark); --active-hdr-start-light: var(--theme-mint-hdr-start-light); --active-hdr-end-light: var(--theme-mint-hdr-end-light); --active-hdr-start-dark: var(--theme-mint-hdr-start-dark); --active-hdr-end-dark: var(--theme-mint-hdr-end-dark); }
+html[data-theme="mono"] { --active-bg-light: var(--theme-mono-bg-light); --active-bg-dark: var(--theme-mono-bg-dark); --active-hdr-start-light: var(--theme-mono-hdr-start-light); --active-hdr-end-light: var(--theme-mono-hdr-end-light); --active-hdr-start-dark: var(--theme-mono-hdr-start-dark); --active-hdr-end-dark: var(--theme-mono-hdr-end-dark); }
+html[data-theme="midnight"] { --active-bg-light: var(--theme-midnight-bg-light); --active-bg-dark: var(--theme-midnight-bg-dark); --active-hdr-start-light: var(--theme-midnight-hdr-start-light); --active-hdr-end-light: var(--theme-midnight-hdr-end-light); --active-hdr-start-dark: var(--theme-midnight-hdr-start-dark); --active-hdr-end-dark: var(--theme-midnight-hdr-end-dark); }
+
+
+/* Theme Utility Classes */
+html.theme-enabled {
+    background-color: var(--active-bg-light) !important;
+    transition: background-color 0.5s ease;
+}
+html.dark.theme-enabled {
+    background-color: var(--active-bg-dark) !important;
+}
+
+.theme-header-bg {
+    background: linear-gradient(to bottom right, var(--active-hdr-start-light), var(--active-hdr-end-light)) !important;
+}
+html.dark .theme-header-bg {
+    background: linear-gradient(to bottom right, var(--active-hdr-start-dark), var(--active-hdr-end-dark)) !important;
+}
