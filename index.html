@@ -272,7 +272,12 @@
                     const syncOrder = ['uob.html', 'asset.html', 'income.html', 'dollar.html', 'duty.html'];
                     let currentIndex = 0;
                     const iframe = document.createElement('iframe');
-                    iframe.style.display = 'none';
+                    iframe.style.position = 'absolute';
+                    iframe.style.width = '1px';
+                    iframe.style.height = '1px';
+                    iframe.style.opacity = '0';
+                    iframe.style.top = '-100px';
+                    iframe.style.pointerEvents = 'none';
                     document.body.appendChild(iframe);
 
                     function syncNext() {
