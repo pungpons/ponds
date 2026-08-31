@@ -194,7 +194,7 @@
                             // This triggers gas_backend.js to do a background refresh
                             window.fetch(url, { headers: { Authorization: "Bearer " + token } }).catch(()=>{});
                         } catch(e) {}
-                    }, index * 500);
+                    }, index * 2000);
                 });
 
                 // 2. Iframe Fallback for New Devices (Only for apps that have NEVER been opened)
