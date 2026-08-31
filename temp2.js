@@ -1,0 +1,1 @@
+ window.GOOGLE_CLIENT_ID = "636153093113-figfghllvhd43j1ihlj3i8dog73r8kb9.apps.googleusercontent.com"; window.APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwnbX8f7-yFIul7v1nxcrbHhFRh35KsQ_Ugvnt_1PRhoQ7xviSOMTBVE8R-Wv54HmD6tg/exec";  <script src="https://accounts.google.com/gsi/client" async defer>
