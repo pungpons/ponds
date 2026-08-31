@@ -730,7 +730,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
         
         // Build the pristine HTML
         const html = `
-            <div class="no-print" style="position: sticky; top: 0; z-index: 9999; background: #f1f5f9; padding: 15px 20px; border-bottom: 1px solid #cbd5e1; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+            <div class="no-print" style="position: sticky; top: 0; z-index: 9999; background: #f1f5f9; padding: max(env(safe-area-inset-top), 15px) 20px 15px 20px; border-bottom: 1px solid #cbd5e1; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
                 <div style="font-weight: 600; font-size: 16px; color: #334155;">ตัวอย่างก่อนพิมพ์</div>
                 <button onclick="window.location.reload()" style="background: #ef4444; color: white; border: none; padding: 10px 24px; border-radius: 99px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);">
                     ปิดหน้าต่างนี้ (ย้อนกลับ)
