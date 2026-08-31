@@ -794,6 +794,60 @@ Error generating stack: `+i.message+`
       }
   }
 </style>
+
+<script id="window-open-interceptor">
+    const originalOpen = window.open;
+    window.open = function(url, target, features) {
+        if (target === '_blank' && (url === '' || !url)) {
+            // Intercept print popups
+            const mockWindow = {
+                document: {
+                    html: '',
+                    open: function() {},
+                    write: function(str) { this.html += str; },
+                    close: function() {
+                        const overlay = document.createElement('div');
+                        overlay.id = 'print-overlay';
+                        overlay.style.position = 'absolute';
+                        overlay.style.left = '-99999px';
+                        overlay.style.top = '0';
+                        overlay.style.width = '100%';
+                        
+                        // Add global hiding styles and aggressive print overrides
+                        const wrappedHtml = `
+                            <style>
+                                @media print {
+                                    body > *:not(#print-overlay) { display: none !important; }
+                                    #print-overlay { display: block !important; position: static !important; left: auto !important; top: auto !important; }
+                                    body, html { display: block !important; height: auto !important; min-height: auto !important; position: static !important; overflow: visible !important; background: white !important; }
+                                    * { box-sizing: border-box !important; }
+                                    .no-print { display: none !important; }
+                                }
+                            </style>
+                            <div style="background: white; width: 100%; font-family: sans-serif;">
+                                ${this.html}
+                            </div>
+                        `;
+                        
+                        overlay.innerHTML = wrappedHtml;
+                        document.body.appendChild(overlay);
+                        this.overlayNode = overlay;
+                    }
+                },
+                print: function() {
+                    window.print();
+                    setTimeout(() => {
+                        if (this.document.overlayNode && this.document.overlayNode.parentNode) {
+                            this.document.overlayNode.parentNode.removeChild(this.document.overlayNode);
+                        }
+                    }, 1000);
+                }
+            };
+            return mockWindow;
+        }
+        return originalOpen.apply(this, arguments);
+    };
+</script>
 </head>
   <body>
     <div id="root"></div>

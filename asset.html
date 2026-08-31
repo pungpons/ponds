@@ -717,6 +717,95 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
       }
   }
 </style>
+
+<script id="print-interceptor">
+    const originalPrint = window.print;
+    window.print = function() {
+        const previewNode = document.getElementById('report-printable-preview');
+        if (!previewNode) {
+            originalPrint();
+            return;
+        }
+        
+        const overlay = document.createElement('div');
+        overlay.id = 'print-overlay';
+        overlay.style.position = 'absolute';
+        overlay.style.left = '-99999px';
+        overlay.style.top = '0';
+        overlay.style.width = '100%';
+        
+        overlay.innerHTML = `
+            <style>
+                @page { size: A4 portrait; margin: 5mm; }
+                @media print {
+                    /* Hide EVERYTHING in the body except the overlay */
+                    body > *:not(#print-overlay) { display: none !important; }
+                    /* Make the overlay the only visible thing */
+                    #print-overlay { 
+                        display: block !important; 
+                        position: static !important; 
+                        left: auto !important; 
+                        top: auto !important;
+                    }
+                    
+                    /* Break out of iOS WebKit flexbox bugs completely */
+                    body, html { 
+                        display: block !important; 
+                        height: auto !important; 
+                        min-height: auto !important;
+                        position: static !important; 
+                        overflow: visible !important; 
+                        background: white !important;
+                        zoom: 0.65 !important;
+                    }
+                    
+                    /* Reset Tailwind conflicts */
+                    #report-printable-preview {
+                        box-shadow: none !important;
+                        border: none !important;
+                        padding: 0 !important;
+                        max-width: none !important;
+                    }
+                    
+                    /* Prevent page breaks inside cards and tables */
+                    .print-card-item, tr, .space-y-4 > div { 
+                        page-break-inside: avoid !important; 
+                        break-inside: avoid !important; 
+                    }
+                    
+                    /* Force word breaks so content doesn't spill horizontally */
+                    * { box-sizing: border-box !important; }
+                    p, span, div, td, th {
+                        word-wrap: break-word !important;
+                        white-space: normal !important;
+                        max-width: 100% !important;
+                    }
+                }
+            </style>
+            <div style="background: white; padding: 10mm; font-family: sans-serif;">
+                <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #1e1b4b; padding-bottom: 10px;">
+                    <h1 style="font-size: 24px; font-weight: bold; color: #1e1b4b; margin: 0;">รายงานสรุปสินทรัพย์ส่วนบุคคล (Asset Portfolio)</h1>
+                    <p style="color: #64748b; font-size: 14px; margin-top: 5px;">จัดทำโดยระบบ PONDs Wealth Management</p>
+                </div>
+                ${previewNode.outerHTML}
+                <div style="margin-top: 40px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+                    เอกสารนี้ถูกสร้างขึ้นอัตโนมัติจากระบบ PONDs
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(overlay);
+        
+        // Wait for styles to apply before invoking native print
+        setTimeout(() => {
+            originalPrint();
+            // Clean up after the print dialog is closed (or cancelled)
+            setTimeout(() => {
+                if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+            }, 1000);
+        }, 150);
+    };
+</script>
 </head>
   <body>
     <div id="root"></div>
