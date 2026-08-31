@@ -162,7 +162,8 @@ if (pondToken && settingsLogoutBtn) {
     settingsLogoutBtn.addEventListener('click', () => {
         if (confirm('คุณต้องการออกจากระบบใช่หรือไม่?')) {
             localStorage.removeItem('pond_ai_token');
-            localStorage.removeItem('google_user_email');
+            localStorage.removeItem('pond_user_email');
+            localStorage.removeItem('user_email');
             window.location.reload();
         }
     });
