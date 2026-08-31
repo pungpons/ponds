@@ -52,18 +52,18 @@
         })();
     </script>    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
-<body class="h-[100dvh] flex flex-col font-sans bg-slate-50 text-slate-900 dark:bg-[#0f172a] dark:text-white relative overflow-hidden">
+<body class="h-[100dvh] flex flex-col font-sans bg-transparent text-slate-900 dark:text-white relative overflow-hidden">
     
     <!-- Dynamic Blobs for Background -->
   <div class="fixed w-[200vw] h-[200vh] -left-[50vw] -top-[50vh] pointer-events-none z-0 transition-opacity duration-500 dark:opacity-0 blob-animate" style="background: radial-gradient(circle at 30% 40%, rgba(79, 70, 229, 0.15) 0%, transparent 40%), radial-gradient(circle at 70% 60%, rgba(244, 63, 94, 0.15) 0%, transparent 40%), radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);"></div>
   <div class="fixed w-[200vw] h-[200vh] -left-[50vw] -top-[50vh] pointer-events-none z-0 transition-opacity duration-500 opacity-0 dark:opacity-100 blob-animate" style="background: radial-gradient(circle at 30% 40%, rgba(79, 70, 229, 0.4) 0%, transparent 40%), radial-gradient(circle at 70% 60%, rgba(244, 63, 94, 0.4) 0%, transparent 40%), radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.3) 0%, transparent 50%);"></div>
   <!-- Vignette Gradient Overlay -->
-  <div class="fixed inset-0 pointer-events-none z-0 transition-colors duration-500 bg-[radial-gradient(ellipse_at_center,transparent_0%,#f8fafc_100%)] dark:bg-[radial-gradient(ellipse_at_center,transparent_0%,#0f172a_100%)]"></div>
+  <div class="fixed inset-0 pointer-events-none z-0 transition-colors duration-500 theme-radial-overlay"></div>
 
     <!-- Lock Screen Overlay -->
-    <div id="lockScreen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#f4f5f7]/80 dark:bg-[#101014]/80 backdrop-blur-md transition-opacity duration-300">
+    <div id="lockScreen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center theme-modal-bg backdrop-blur-md transition-opacity duration-300">
         <div class="backdrop-blur-xl bg-white/70 dark:bg-white/5 p-8 rounded-3xl shadow-xl dark:shadow-2xl w-full max-w-md text-center border border-black/5 dark:border-white/10 transition-colors duration-500">
-          <div class="w-auto px-6 h-24 rounded-[28%] bg-gradient-to-r from-blue-700 to-indigo-800 mx-auto mb-6 flex items-center justify-center text-white text-5xl font-bold tracking-wider shadow-xl shadow-indigo-900/30 inline-flex">POND</div>
+          <div class="w-auto px-6 h-24 rounded-[28%] theme-header-bg mx-auto mb-6 flex items-center justify-center text-white text-5xl font-bold tracking-wider shadow-xl shadow-indigo-900/30 inline-flex">POND</div>
           <h2 class="text-2xl font-bold mb-2 text-gray-900 dark:text-white">Secure Access</h2>
           <p class="text-slate-500 dark:text-white/60 mb-8 text-sm">Please sign in with your authorized Google Account to access PONDs.</p>
           
@@ -92,6 +92,11 @@
         </div>
         <div class="flex items-center gap-3">
             <!-- Settings Button -->
+            <!-- Theme Toggle -->
+            <button id="themeToggle" class="w-10 h-10 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 text-ios-text dark:text-ios-darkText backdrop-blur-md transition-all duration-500 ease-apple active:scale-90 active:opacity-70 hover:scale-105" title="Toggle Theme">
+                <svg id="themeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+            <!-- Settings Button -->
             <button id="settingsBtn" class="w-10 h-10 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 text-ios-text dark:text-ios-darkText backdrop-blur-md transition-all duration-500 ease-apple active:scale-90 active:opacity-70 hover:scale-105" title="Settings">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
             </button>
@@ -110,7 +115,7 @@
 
   <!-- Edit Modal Overlay -->
   <div id="app-modal" class="fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-md z-[200] hidden items-center justify-center p-4 transition-colors duration-500">
-    <div class="backdrop-blur-xl bg-white/90 dark:bg-[#0f172a]/90 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all border border-black/10 dark:border-white/10">
+    <div class="backdrop-blur-xl theme-modal-bg rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all border border-black/10 dark:border-white/10">
       <div class="p-6">
         <div class="flex justify-between items-center mb-6">
           <h3 id="modal-title" class="text-xl font-bold tracking-tight">Edit App</h3>
@@ -165,7 +170,7 @@
 
   <!-- Settings Modal Overlay -->
   <div id="settings-modal" class="fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-md z-[200] hidden items-center justify-center p-4 transition-colors duration-500">
-    <div class="backdrop-blur-xl bg-white/90 dark:bg-[#0f172a]/90 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all border border-black/10 dark:border-white/10">
+    <div class="backdrop-blur-xl theme-modal-bg rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all border border-black/10 dark:border-white/10">
       <div class="p-6">
         <div class="flex justify-between items-center mb-6">
           <h3 class="text-xl font-bold tracking-tight text-slate-800 dark:text-white">Settings</h3>

@@ -302,3 +302,18 @@ html.dark.theme-enabled {
 html.dark .theme-header-bg {
     background: linear-gradient(to bottom right, var(--active-hdr-start-dark), var(--active-hdr-end-dark)) !important;
 }
+
+.theme-radial-overlay {
+    background: radial-gradient(ellipse at center, transparent 0%, var(--active-bg-light) 100%);
+}
+html.dark .theme-radial-overlay {
+    background: radial-gradient(ellipse at center, transparent 0%, var(--active-bg-dark) 100%);
+}
+
+.theme-modal-bg {
+    background-color: rgba(255, 255, 255, 0.9);
+}
+html.dark .theme-modal-bg {
+    background-color: var(--active-bg-dark);
+    opacity: 0.95;
+}
