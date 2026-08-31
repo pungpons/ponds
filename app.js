@@ -705,7 +705,10 @@ function renderApps() {
 
             // Navigate while overlay is fully covering screen — no flicker
             setTimeout(() => {
-                window.location.href = app.url;
+                const a = document.createElement('a');
+                a.href = app.url;
+                document.body.appendChild(a);
+                a.click();
             }, 300);
         });
         
