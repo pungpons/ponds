@@ -171,5 +171,45 @@
   </div>
 
 <script src="app.js?v=1788066422"></script>
+
+    <!-- PONDs Smart Background Sync -->
+    <script>
+        window.addEventListener('load', () => {
+            const token = localStorage.getItem('pond_ai_token');
+            // Only sync if user is logged in
+            if (!token) return;
+
+            const syncOrder = ['uob.html', 'asset.html', 'income.html', 'dollar.html', 'duty.html'];
+            let currentIndex = 0;
+            
+            // Create a hidden iframe for silent syncing
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+
+            function syncNext() {
+                if (currentIndex >= syncOrder.length) {
+                    console.log('✅ Smart Background Sync Completed!');
+                    setTimeout(() => {
+                        if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+                    }, 1000);
+                    return;
+                }
+                
+                const appToSync = syncOrder[currentIndex];
+                console.log('🔄 Background Syncing:', appToSync);
+                iframe.src = appToSync;
+                
+                currentIndex++;
+                // Wait 4 seconds for the app to fetch data before loading the next one
+                setTimeout(syncNext, 4000);
+            }
+
+            // Start the sync process 3 seconds after the home screen is fully loaded
+            // so it doesn't interrupt the user's initial interaction
+            setTimeout(syncNext, 3000);
+        });
+    </script>
+
 </body>
 </html>
