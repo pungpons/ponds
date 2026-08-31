@@ -661,62 +661,61 @@ function renderApps() {
 
             e.preventDefault(); // Stop the native <a> tag from navigating instantly
 
-            // 1. Icon press feedback (Smooth iOS style)
-            iconBtn.style.transition = 'transform 0.15s cubic-bezier(0.22, 1, 0.36, 1)';
-            iconBtn.style.transform = 'scale(0.9)';
+            // 1. Icon bounce feedback
+            iconBtn.style.transition = 'transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            iconBtn.style.transform = 'scale(0.85)';
+            setTimeout(() => {
+                iconBtn.style.transform = 'scale(1.08)';
+                setTimeout(() => { iconBtn.style.transform = 'scale(1)'; }, 100);
+            }, 100);
 
-            // 2. Beautiful Pastel Bloom Animation (Smooth version)
+            // 2. Soft zoom-from-icon overlay that fades out as it expands
             const rect = iconBtn.getBoundingClientRect();
             const originX = ((rect.left + rect.width / 2) / window.innerWidth * 100).toFixed(2) + '%';
             const originY = ((rect.top + rect.height / 2) / window.innerHeight * 100).toFixed(2) + '%';
             const isDark = document.documentElement.classList.contains('dark');
             const bg = isDark ? (app.darkGradient || app.lightGradient) : app.lightGradient;
-            
-            // Determine the final background color to avoid flashing
-            let targetBg = isDark ? '#020617' : '#f8fafc'; 
-            if (app.url === 'uob.html') targetBg = '#0f172a';
-            else if (app.url === 'pharmadash.html') targetBg = '#f1f5f9';
 
             const overlay = document.createElement('div');
             overlay.className = 'launch-overlay';
             overlay.style.cssText = `
-                position: fixed; inset: -10vh -10vw; z-index: 99999;
+                position: fixed; inset: 0; z-index: 99999;
                 background: ${bg};
                 transform-origin: ${originX} ${originY};
-                transform: scale(0.05);
+                transform: scale(0.1);
                 border-radius: 50%;
                 opacity: 1;
                 pointer-events: none;
                 overflow: hidden;
-                transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-                            border-radius 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+                transition: transform 0.32s cubic-bezier(0.32, 0, 0.15, 1),
+                            border-radius 0.32s cubic-bezier(0.32, 0, 0.15, 1);
             `;
             
-            // Add a wash layer to fade the vibrant gradient into the app's actual background
+            // Add a wash layer to fade the vibrant gradient into a pastel color
             const wash = document.createElement('div');
             wash.style.cssText = `
                 position: absolute; inset: 0;
-                background: ${targetBg};
+                background: ${isDark ? '#0f172a' : '#ffffff'};
                 opacity: 0;
-                transition: opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+                transition: opacity 0.32s ease-out;
             `;
             overlay.appendChild(wash);
             
             document.body.appendChild(overlay);
 
-            // Expand overlay and fade in the wash
+            // Expand overlay and fade in the pastel wash
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    overlay.style.transform = 'scale(1.2)';
-                    overlay.style.borderRadius = '0px';
-                    wash.style.opacity = '1';
+                    overlay.style.transform = 'scale(1)';
+                    overlay.style.borderRadius = '32px';
+                    wash.style.opacity = '0.8'; // Fades to 80% white/dark (pastel effect)
                 });
             });
 
             // Navigate while overlay is fully covering screen — no flicker
             setTimeout(() => {
                 window.location.href = app.url + '?v=' + new Date().getTime();
-            }, 400);
+            }, 300);
 
             
         });
