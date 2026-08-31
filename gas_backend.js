@@ -92,8 +92,9 @@ try {
         
         const urlStr = url && url.toString ? url.toString() : String(url);
         if (urlStr.includes('googleapis.com')) {
-            if (!gasUrl) {
-                return new Response(JSON.stringify({error: 'Not configured'}), {status: 401});
+            if (typeof gasUrl === 'undefined' || !gasUrl) {
+                // DO NOT BLOCK! Child apps have their own interceptors and direct API access.
+                return originalFetch.apply(this, args);
             }
 
             const isGet = !options.method || options.method.toUpperCase() === 'GET';

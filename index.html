@@ -53,7 +53,7 @@
         })();
     </script>    <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-    <script src="gas_backend.js?v=1788163833551"></script>
+    <script src="gas_backend.js?v=1788172642256"></script>
 </head>
 <body class="h-[100dvh] flex flex-col font-sans bg-transparent text-slate-900 dark:text-white relative overflow-hidden">
     
@@ -258,7 +258,7 @@
                     setTimeout(() => {
                         try {
                             const url = atob(key.replace('gas_cache_', ''));
-                            // This triggers gas_backend.js?v=1788163833551 to do a background refresh
+                            // This triggers gas_backend.js?v=1788172642256 to do a background refresh
                             window.fetch(url, { headers: { Authorization: "Bearer " + token } }).catch(()=>{});
                         } catch(e) {}
                     }, index * 2000);
