@@ -586,7 +586,7 @@ function renderApps() {
     
     myApps.forEach((app, index) => {
         const appEl = document.createElement('a');
-        appEl.className = 'group app-icon animate-bloom flex flex-col items-center gap-2 cursor-pointer select-none relative [-webkit-touch-callout:none]';
+        appEl.className = 'app-icon animate-bloom flex flex-col items-center gap-2 cursor-pointer select-none relative [-webkit-touch-callout:none]';
         if (app.url) { appEl.href = app.url + '?v=' + new Date().getTime(); }
         // Add stagger delay for the bloom animation (e.g., 0.05s, 0.08s, 0.11s...)
         appEl.style.setProperty('--bloom-delay', `${0.05 + index * 0.03}s`);
@@ -620,7 +620,7 @@ function renderApps() {
         
         
         const iconBtn = document.createElement('div');
-        iconBtn.className = 'w-[72px] h-[72px] sm:w-20 sm:h-20 rounded-[22%] app-icon-3d flex items-center justify-center text-[34px] sm:text-4xl text-white font-bold transition-transform group-active:scale-95 duration-200 bg-cover bg-center overflow-hidden';
+        iconBtn.className = 'w-[72px] h-[72px] sm:w-20 sm:h-20 rounded-[22%] app-icon-3d flex items-center justify-center text-[34px] sm:text-4xl text-white font-bold transition-transform active:scale-95 duration-200 bg-cover bg-center overflow-hidden';
         
         if (app.customIconBase64) {
             // Apply image to the background and remove text
@@ -685,27 +685,33 @@ function renderApps() {
                 border-radius: 50%;
                 opacity: 1;
                 pointer-events: none;
-                transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease-out 0.1s;
+                overflow: hidden;
+                transition: transform 0.32s cubic-bezier(0.32, 0, 0.15, 1),
+                            border-radius 0.32s cubic-bezier(0.32, 0, 0.15, 1);
             `;
             
+            // Add a wash layer to fade the vibrant gradient into a pastel color
             const wash = document.createElement('div');
             wash.style.cssText = `
-                position: absolute; inset: 0; border-radius: 50%;
+                position: absolute; inset: 0;
                 background: ${isDark ? '#0f172a' : '#ffffff'};
                 opacity: 0;
-                transition: opacity 0.3s ease;
+                transition: opacity 0.32s ease-out;
             `;
             overlay.appendChild(wash);
-            document.body.appendChild(overlay);
             
+            document.body.appendChild(overlay);
+
+            // Expand overlay and fade in the pastel wash
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    overlay.style.transform = 'scale(3)';
-                    overlay.style.opacity = '0';
-                    wash.style.opacity = '0.8';
+                    overlay.style.transform = 'scale(1)';
+                    overlay.style.borderRadius = '32px';
+                    wash.style.opacity = '0.8'; // Fades to 80% white/dark (pastel effect)
                 });
             });
 
+            // Navigate while overlay is fully covering screen — no flicker
             setTimeout(() => {
                 window.location.href = app.url + '?v=' + new Date().getTime();
             }, 300);
