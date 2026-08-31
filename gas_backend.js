@@ -159,11 +159,22 @@ try {
     };
 
     async function callGas(targetUrl, options, gasUrl) {
+        let plainHeaders = {};
+        if (options.headers) {
+            if (options.headers instanceof Headers || typeof options.headers.entries === 'function') {
+                for (let [key, value] of options.headers.entries()) {
+                    plainHeaders[key] = value;
+                }
+            } else {
+                plainHeaders = { ...options.headers };
+            }
+        }
+        
         const payload = {
             url: targetUrl,
             method: options.method || 'GET',
             body: options.body,
-            headers: options.headers || {}
+            headers: plainHeaders
         };
 
         const res = await originalFetch(gasUrl, {
