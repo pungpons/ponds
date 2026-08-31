@@ -788,11 +788,12 @@ Error generating stack: `+i.message+`
   
 <style id="ios-safe-area-fix">
   /* iOS Safe Area Fix for Dynamic Island */
-  header, div.sticky.top-0.z-40, div.sticky.top-0.z-50 {
+  /* Pharma uses z-30, others use z-40/z-50 — cover all sticky top-0 headers */
+  header.sticky.top-0, div.sticky.top-0.z-30, div.sticky.top-0.z-40, div.sticky.top-0.z-50 {
       padding-top: max(env(safe-area-inset-top), 8px) !important;
   }
   @media (min-width: 640px) {
-      header, div.sticky.top-0.z-40, div.sticky.top-0.z-50 {
+      header.sticky.top-0, div.sticky.top-0.z-30, div.sticky.top-0.z-40, div.sticky.top-0.z-50 {
           padding-top: max(env(safe-area-inset-top), 16px) !important;
       }
   }
