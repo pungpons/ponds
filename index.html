@@ -253,13 +253,14 @@
                 // This finds all previously requested API URLs and quietly updates them in the background
                 const keys = Object.keys(localStorage).filter(k => k.startsWith('gas_cache_'));
                 
-                // We stagger the headless requests by 500ms to avoid slamming the network
+                // We stagger the headless requests by 2s to avoid slamming the network
+                // NOTE: Do NOT send Authorization header — gas_backend.js handles auth via GAS proxy automatically
                 keys.forEach((key, index) => {
                     setTimeout(() => {
                         try {
                             const url = atob(key.replace('gas_cache_', ''));
-                            // This triggers gas_backend.js?v=1788172642256 to do a background refresh
-                            window.fetch(url, { headers: { Authorization: "Bearer " + token } }).catch(()=>{});
+                            // gas_backend.js intercepts this, serves from cache, and bgFetch refreshes in background
+                            window.fetch(url).catch(()=>{});
                         } catch(e) {}
                     }, index * 2000);
                 });
@@ -268,7 +269,7 @@
                 // If the user has 0 cache keys, they are on a new device. We use the heavy iframe method.
                 if (keys.length === 0) {
                     console.log('📱 New device detected, using Iframe Fallback Sync...');
-                    const syncOrder = ['uob.html', 'asset.html', 'income.html', 'dollar.html', 'duty.html'];
+                    const syncOrder = ['uob.html', 'asset.html', 'income.html', 'dollar.html', 'duty.html', 'pharmadash.html'];
                     let currentIndex = 0;
                     const iframe = document.createElement('iframe');
                     iframe.style.display = 'none';
