@@ -174,7 +174,7 @@ try {
         }
         
         const payload = {
-            url: urlStr,
+            url: targetUrl,
             method: options.method || 'GET',
             body: options.body,
             headers: plainHeaders

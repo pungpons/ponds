@@ -2,7 +2,7 @@
 <html lang="en" class="theme-enabled">
 <head>
     <link rel="manifest" href="manifest.json">
-    <script src="gas_backend.js?v=1788162107862"></script>
+    <script src="gas_backend.js?v=1788162974729"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)" id="theme-color-meta-light">
@@ -243,7 +243,7 @@
                     setTimeout(() => {
                         try {
                             const url = atob(key.replace('gas_cache_', ''));
-                            // This triggers gas_backend.js?v=1788162107862 to do a background refresh
+                            // This triggers gas_backend.js?v=1788162974729 to do a background refresh
                             window.fetch(url, { headers: { Authorization: "Bearer " + token } }).catch(()=>{});
                         } catch(e) {}
                     }, index * 2000);
