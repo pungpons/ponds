@@ -776,7 +776,7 @@ window.addEventListener('pageshow', () => {
 const CLIENT_ID = '636153093113-figfghllvhd43j1ihlj3i8dog73r8kb9.apps.googleusercontent.com';
 const AUTHORIZED_EMAIL = 'wisut.pond@gmail.com';
 const lockScreen = document.getElementById('lockScreen');
-const loginBtn = document.getElementById('loginBtn');
+
 const loginErrorMsg = document.getElementById('loginErrorMsg');
 
 let tokenClient;
@@ -890,7 +890,7 @@ async function validateUser(token) {
             lockScreen.style.transform = 'scale(1.05)';
             lockScreen.style.pointerEvents = 'none';
             setTimeout(() => lockScreen.classList.add('hidden'), 800);
-            loginBtn.classList.remove('hidden');
+            if (typeof settingsBtn !== "undefined" && settingsBtn) settingsBtn.classList.remove("hidden");
             loginErrorMsg.classList.add('hidden');
         } else {
             localStorage.removeItem('pond_ai_token');
@@ -933,7 +933,7 @@ if (savedToken && !isExpired) {
     lockScreen.style.opacity = '0';
     lockScreen.style.pointerEvents = 'none';
     setTimeout(() => lockScreen.classList.add('hidden'), 500);
-    loginBtn.classList.remove('hidden');
+    if (typeof settingsBtn !== "undefined" && settingsBtn) settingsBtn.classList.remove("hidden");
 } else if (savedToken && isExpired) {
     localStorage.removeItem('pond_ai_token');
     localStorage.removeItem('pond_ai_token_time');
@@ -947,16 +947,7 @@ if (urlParams.get('expired') === '1') {
     window.history.replaceState(null, '', window.location.pathname);
 }
 
-loginBtn.addEventListener('click', () => {
-    localStorage.removeItem('pond_ai_token');
-    localStorage.removeItem('pond_ai_token_time');
-    loginBtn.classList.add('hidden');
-    lockScreen.style.transition = 'opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)';
-    lockScreen.style.opacity = '1';
-    lockScreen.style.transform = 'scale(1)';
-    lockScreen.style.pointerEvents = 'auto';
-    lockScreen.classList.remove('hidden');
-});
+
 
 
 // Auto-inject PharmaDash if missing from user's saved apps
