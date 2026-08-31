@@ -695,13 +695,7 @@ function renderApps() {
             const wash = document.createElement('div');
             wash.style.cssText = `
                 position: absolute; inset: 0;
-                
-                background: ${(() => {
-                    let target = isDark ? '#020617' : '#f8fafc';
-                    if (app.url === 'uob.html') target = '#0f172a';
-                    else if (app.url === 'pharmadash.html') target = '#f1f5f9';
-                    return target;
-                })()};
+                background: ${isDark ? '#0f172a' : '#ffffff'};
                 opacity: 0;
                 transition: opacity 0.32s ease-out;
             `;
