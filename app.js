@@ -607,6 +607,7 @@ function renderApps() {
         
         
         badge.addEventListener('click', (e) => {
+            e.preventDefault();
             e.stopPropagation();
             if (isEditMode) openModal(app);
         });
