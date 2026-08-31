@@ -3,6 +3,24 @@ const settingsBtn = document.getElementById('settingsBtn');
 const settingsModal = document.getElementById('settings-modal');
 const closeSettingsBtn = document.getElementById('close-settings-btn');
 const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
+
+const openThemeBtn = document.getElementById('open-theme-btn');
+const backToSettingsBtn = document.getElementById('back-to-settings-btn');
+const settingsMainView = document.getElementById('settings-main-view');
+const settingsThemeView = document.getElementById('settings-theme-view');
+
+if (openThemeBtn && backToSettingsBtn) {
+    openThemeBtn.addEventListener('click', () => {
+        settingsMainView.classList.add('hidden');
+        settingsThemeView.classList.remove('hidden');
+    });
+    
+    backToSettingsBtn.addEventListener('click', () => {
+        settingsThemeView.classList.add('hidden');
+        settingsMainView.classList.remove('hidden');
+    });
+}
+
 const themeMeta = document.getElementById('theme-color-meta');
 
 // Display Mode logic
