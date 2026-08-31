@@ -269,7 +269,7 @@
                 // If the user has 0 cache keys, they are on a new device. We use the heavy iframe method.
                 if (keys.length === 0) {
                     console.log('📱 New device detected, using Iframe Fallback Sync...');
-                    const syncOrder = ['uob.html', 'asset.html', 'income.html', 'dollar.html', 'duty.html', 'pharmadash.html'];
+                    const syncOrder = ['uob.html', 'asset.html', 'income.html', 'dollar.html', 'duty.html'];
                     let currentIndex = 0;
                     const iframe = document.createElement('iframe');
                     iframe.style.display = 'none';
