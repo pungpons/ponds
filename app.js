@@ -661,61 +661,63 @@ function renderApps() {
 
             e.preventDefault(); // Stop the native <a> tag from navigating instantly
 
-            // 1. Icon bounce feedback
-            iconBtn.style.transition = 'transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1)';
-            iconBtn.style.transform = 'scale(0.85)';
-            setTimeout(() => {
-                iconBtn.style.transform = 'scale(1.08)';
-                setTimeout(() => { iconBtn.style.transform = 'scale(1)'; }, 100);
-            }, 100);
-
-            // 2. Soft zoom-from-icon overlay that fades out as it expands
+            // iOS-style zoom-from-icon overlay
             const rect = iconBtn.getBoundingClientRect();
-            const originX = ((rect.left + rect.width / 2) / window.innerWidth * 100).toFixed(2) + '%';
-            const originY = ((rect.top + rect.height / 2) / window.innerHeight * 100).toFixed(2) + '%';
             const isDark = document.documentElement.classList.contains('dark');
-            const bg = isDark ? (app.darkGradient || app.lightGradient) : app.lightGradient;
+            
+            // Determine target background based on app url to prevent white flash
+            let targetBg = isDark ? '#020617' : '#f8fafc'; // Default to slate-950/slate-50
+            if (app.url === 'uob.html') targetBg = '#0f172a';
+            else if (app.url === 'pharmadash.html') targetBg = '#f1f5f9';
 
-            const overlay = document.createElement('div');
-            overlay.className = 'launch-overlay';
-            overlay.style.cssText = `
-                position: fixed; inset: 0; z-index: 99999;
-                background: ${bg};
-                transform-origin: ${originX} ${originY};
-                transform: scale(0.1);
-                border-radius: 50%;
-                opacity: 1;
+            const clone = iconBtn.cloneNode(true);
+            clone.style.cssText = `
+                position: fixed;
+                top: ${rect.top}px;
+                left: ${rect.left}px;
+                width: ${rect.width}px;
+                height: ${rect.height}px;
+                z-index: 99999;
+                border-radius: 22%;
+                margin: 0;
+                transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
                 pointer-events: none;
-                overflow: hidden;
-                transition: transform 0.32s cubic-bezier(0.32, 0, 0.15, 1),
-                            border-radius 0.32s cubic-bezier(0.32, 0, 0.15, 1);
+                display: flex;
             `;
             
-            // Add a wash layer to fade the vibrant gradient into a pastel color
+            // Remove text from clone so it's just the background/gradient zooming
+            clone.innerText = '';
+            
+            // Create wash overlay to fade to the app's target background smoothly
             const wash = document.createElement('div');
             wash.style.cssText = `
                 position: absolute; inset: 0;
-                background: ${isDark ? '#0f172a' : '#ffffff'};
+                background: ${targetBg};
                 opacity: 0;
-                transition: opacity 0.32s ease-out;
+                border-radius: inherit;
+                transition: opacity 0.35s ease-out;
             `;
-            overlay.appendChild(wash);
+            clone.appendChild(wash);
             
-            document.body.appendChild(overlay);
+            document.body.appendChild(clone);
+            iconBtn.style.opacity = '0'; // Hide original icon
 
-            // Expand overlay and fade in the pastel wash
+            // Animate to full screen
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                    overlay.style.transform = 'scale(1)';
-                    overlay.style.borderRadius = '32px';
-                    wash.style.opacity = '0.8'; // Fades to 80% white/dark (pastel effect)
+                    clone.style.top = '0px';
+                    clone.style.left = '0px';
+                    clone.style.width = '100vw';
+                    clone.style.height = '100vh';
+                    clone.style.borderRadius = '0px';
+                    wash.style.opacity = '1';
                 });
             });
 
             // Navigate while overlay is fully covering screen — no flicker
             setTimeout(() => {
                 window.location.href = app.url + '?v=' + new Date().getTime();
-            }, 300);
+            }, 360);
 
             
         });
