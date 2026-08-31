@@ -795,8 +795,11 @@ Error generating stack: `+i.message+`
   }
 </style>
 
+
 <script id="window-open-interceptor">
     const originalOpen = window.open;
+    const originalPrint = window.print;
+    
     window.open = function(url, target, features) {
         if (target === '_blank' && (url === '' || !url)) {
             // Intercept print popups
@@ -806,41 +809,57 @@ Error generating stack: `+i.message+`
                     open: function() {},
                     write: function(str) { this.html += str; },
                     close: function() {
-                        const overlay = document.createElement('div');
-                        overlay.id = 'print-overlay';
-                        overlay.style.position = 'absolute';
-                        overlay.style.left = '-99999px';
-                        overlay.style.top = '0';
-                        overlay.style.width = '100%';
-                        
-                        // Add global hiding styles and aggressive print overrides
-                        const wrappedHtml = `
-                            <style>
-                                @media print {
-                                    body > *:not(#print-overlay) { display: none !important; }
-                                    #print-overlay { display: block !important; position: static !important; left: auto !important; top: auto !important; }
-                                    body, html { display: block !important; height: auto !important; min-height: auto !important; position: static !important; overflow: visible !important; background: white !important; }
-                                    * { box-sizing: border-box !important; }
-                                    .no-print { display: none !important; }
-                                }
-                            </style>
-                            <div style="background: white; width: 100%; font-family: sans-serif;">
+                        const html = `
+                            <div class="no-print" style="position: sticky; top: 0; z-index: 9999; background: #f1f5f9; padding: 15px 20px; border-bottom: 1px solid #cbd5e1; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                                <div style="font-weight: 600; font-size: 16px; color: #334155;">ตัวอย่างก่อนพิมพ์</div>
+                                <button onclick="window.location.reload()" style="background: #ef4444; color: white; border: none; padding: 10px 24px; border-radius: 99px; font-weight: bold; font-size: 16px; cursor: pointer; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);">
+                                    ปิดหน้าต่างนี้ (ย้อนกลับ)
+                                </button>
+                            </div>
+                            <div style="background: white; width: 100%; font-family: sans-serif; color: black; padding: 20px;">
                                 ${this.html}
                             </div>
                         `;
                         
-                        overlay.innerHTML = wrappedHtml;
-                        document.body.appendChild(overlay);
-                        this.overlayNode = overlay;
+                        // 1. Destroy complex layout styles
+                        document.querySelectorAll('style').forEach(el => {
+                            if (el.id !== 'print-interceptor-styles') el.remove();
+                        });
+                        
+                        // 2. Add print-specific styles
+                        const style = document.createElement('style');
+                        style.id = 'print-interceptor-styles';
+                        style.innerHTML = `
+                            @page { size: A4 portrait; margin: 5mm; }
+                            html, body { 
+                                background: white !important; 
+                                margin: 0 !important; 
+                                padding: 0 !important; 
+                                height: auto !important; 
+                                min-height: auto !important; 
+                                display: block !important; 
+                                position: static !important;
+                                overflow: visible !important;
+                            }
+                            * { box-sizing: border-box !important; }
+                            @media print {
+                                .no-print { display: none !important; }
+                            }
+                        `;
+                        document.head.appendChild(style);
+                        
+                        // 3. Nuke the React app and replace with static HTML
+                        document.body.innerHTML = html;
+                        document.body.className = '';
+                        document.body.style = '';
+                        document.documentElement.className = '';
+                        document.documentElement.style = '';
                     }
                 },
                 print: function() {
-                    window.print();
                     setTimeout(() => {
-                        if (this.document.overlayNode && this.document.overlayNode.parentNode) {
-                            this.document.overlayNode.parentNode.removeChild(this.document.overlayNode);
-                        }
-                    }, 1000);
+                        originalPrint();
+                    }, 800); // Give WebKit time to repaint
                 }
             };
             return mockWindow;
@@ -848,6 +867,7 @@ Error generating stack: `+i.message+`
         return originalOpen.apply(this, arguments);
     };
 </script>
+
 </head>
   <body>
     <div id="root"></div>
