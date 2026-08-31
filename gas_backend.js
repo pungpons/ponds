@@ -89,7 +89,9 @@ try {
         const url = args[0];
         const options = args[1] || {};
 
-        if (typeof url === 'string' && url.includes('googleapis.com')) {
+        
+        const urlStr = url && url.toString ? url.toString() : String(url);
+        if (urlStr.includes('googleapis.com')) {
             if (!gasUrl) {
                 return new Response(JSON.stringify({error: 'Not configured'}), {status: 401});
             }
@@ -161,17 +163,18 @@ try {
     async function callGas(targetUrl, options, gasUrl) {
         let plainHeaders = {};
         if (options.headers) {
-            if (options.headers instanceof Headers || typeof options.headers.entries === 'function') {
-                for (let [key, value] of options.headers.entries()) {
+            try {
+                const tempHeaders = new Headers(options.headers);
+                tempHeaders.forEach((value, key) => {
                     plainHeaders[key] = value;
-                }
-            } else {
-                plainHeaders = { ...options.headers };
+                });
+            } catch (e) {
+                plainHeaders = Object.assign({}, options.headers);
             }
         }
         
         const payload = {
-            url: targetUrl,
+            url: urlStr,
             method: options.method || 'GET',
             body: options.body,
             headers: plainHeaders
