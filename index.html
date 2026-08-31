@@ -254,13 +254,13 @@
                 const keys = Object.keys(localStorage).filter(k => k.startsWith('gas_cache_'));
                 
                 // We stagger the headless requests by 2s to avoid slamming the network
-                // NOTE: Do NOT send Authorization header — gas_backend.js handles auth via GAS proxy automatically
+                // NOTE: We MUST send the Authorization header so gas_backend.js can proxy it to GAS
                 keys.forEach((key, index) => {
                     setTimeout(() => {
                         try {
                             const url = atob(key.replace('gas_cache_', ''));
                             // gas_backend.js intercepts this, serves from cache, and bgFetch refreshes in background
-                            window.fetch(url).catch(()=>{});
+                            window.fetch(url, { headers: { Authorization: "Bearer " + token } }).catch(()=>{});
                         } catch(e) {}
                     }, index * 2000);
                 });
