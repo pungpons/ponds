@@ -23,7 +23,7 @@ function updateDisplayModeButtons() {
     });
 }
 
-function applyDisplayMode(mode, isInit = false) {
+function applyDisplayMode(mode, isInit = false, skipSave = false) {
     let isDark = false;
     if (mode === 'auto') {
         isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -44,6 +44,7 @@ function applyDisplayMode(mode, isInit = false) {
         currentDisplayMode = mode;
         updateDisplayModeButtons();
         if (typeof renderApps === 'function') renderApps();
+        if (!skipSave && typeof saveApps === 'function') saveApps();
     }
 }
 
@@ -59,11 +60,12 @@ function updateMetaThemeColor() {
     }, 50);
 }
 
-function applyColorTheme(themeName) {
+function applyColorTheme(themeName, skipSave = false) {
     document.documentElement.setAttribute('data-theme', themeName);
     localStorage.setItem('pond_color_theme', themeName);
     currentColorTheme = themeName;
     updateMetaThemeColor();
+    if (!skipSave && typeof saveApps === 'function') saveApps();
     // Update active swatch state
     document.querySelectorAll('[data-set-theme]').forEach(btn => {
         if (btn.getAttribute('data-set-theme') === themeName) {
@@ -245,8 +247,22 @@ async function loadAppsFromCloud(token) {
             const contentRes = await fetch(`https://www.googleapis.com/drive/v3/files/${cloudConfigFileId}?alt=media`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            const cloudApps = await contentRes.json();
-            if (cloudApps && Array.isArray(cloudApps)) {
+            const cloudData = await contentRes.json();
+            if (cloudData) {
+                // Backward compatibility: if it's an array, it's just apps. Otherwise it's an object.
+                const cloudApps = Array.isArray(cloudData) ? cloudData : (cloudData.apps || []);
+                
+                // Sync Theme Preferences
+                if (!Array.isArray(cloudData)) {
+                    if (cloudData.displayMode && cloudData.displayMode !== currentDisplayMode) {
+                        applyDisplayMode(cloudData.displayMode, false, true); // true = skip save to prevent loop
+                        updateDisplayModeButtons();
+                    }
+                    if (cloudData.colorTheme && cloudData.colorTheme !== currentColorTheme) {
+                        applyColorTheme(cloudData.colorTheme, true); // true = skip save
+                    }
+                }
+                
                 cloudApps.forEach(app => {
                     // Force core apps to use relative URLs regardless of what is in the cloud config
                     // This prevents PWA domain escaping if an old absolute URL was accidentally saved
@@ -300,23 +316,34 @@ async function saveAppsToCloud(token, isCreate = false) {
         }
         
         // 2. Upload content via PATCH media
+        const payload = {
+            apps: myApps,
+            displayMode: currentDisplayMode,
+            colorTheme: currentColorTheme
+        };
         await fetch(`https://www.googleapis.com/upload/drive/v3/files/${cloudConfigFileId}?uploadType=media`, {
             method: 'PATCH',
             headers: { 
                 Authorization: `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(myApps)
+            body: JSON.stringify(payload)
         });
     } catch (err) {
         console.error("Failed to save to cloud:", err);
     }
 }
 
+let cloudSaveTimeout = null;
 function saveApps() {
     localStorage.setItem('pond_myApps', JSON.stringify(myApps));
     const token = localStorage.getItem('pond_ai_token');
-    if (token) saveAppsToCloud(token);
+    if (token) {
+        clearTimeout(cloudSaveTimeout);
+        cloudSaveTimeout = setTimeout(() => {
+            saveAppsToCloud(token);
+        }, 1500); // 1.5s debounce to prevent spamming Google Drive API
+    }
 }
 
 function loadApps() {
