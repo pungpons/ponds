@@ -628,11 +628,11 @@ React keys must be passed directly to JSX without using spread:
 
 <style id="ios-safe-area-fix">
   /* iOS Safe Area Fix for Dynamic Island */
-  header, [class*="sticky top-0"] {
+  header, div.sticky.top-0.z-40, div.sticky.top-0.z-50 {
       padding-top: max(env(safe-area-inset-top), 8px) !important;
   }
   @media (min-width: 640px) {
-      header, [class*="sticky top-0"] {
+      header, div.sticky.top-0.z-40, div.sticky.top-0.z-50 {
           padding-top: max(env(safe-area-inset-top), 16px) !important;
       }
   }
