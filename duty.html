@@ -107,7 +107,21 @@
     }
 }
 </style>
-<script src="https://accounts.google.com/gsi/client" async defer></script></head>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style id="ios-safe-area-fix">
+  /* iOS Safe Area Fix for Dynamic Island */
+  @supports (padding-top: max(env(safe-area-inset-top), 0px)) {
+      header {
+          padding-top: max(env(safe-area-inset-top), 8px) !important;
+      }
+      @media (min-width: 640px) {
+          header {
+              padding-top: max(env(safe-area-inset-top), 16px) !important;
+          }
+      }
+  }
+</style>
+</head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen transition-colors duration-200">
   <div id="app" >
 
