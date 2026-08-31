@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
-    <script src="gas_backend.js?v=1788164103457"></script>
+    <script src="gas_backend.js?v=1788164374718"></script>
 
 
 
@@ -730,102 +730,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
     <body>
         ${previewNode.outerHTML}
         <script>
-            setTimeout(() => { {
-    const previewNode = document.getElementById('report-printable-preview');
-    if (!previewNode) {
-        window.print();
-        return;
-    }
-    
-    // Create a new window
-    const printWin = window.open('', '_blank');
-    if (!printWin) {
-        alert('กรุณาอนุญาต Pop-up เพื่อดูตัวอย่างก่อนพิมพ์ครับ');
-        window.print();
-        return;
-    }
-    
-    const html = `<!DOCTYPE html>
-    <html lang="th">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Asset Report - PONDs</title>
-        <script src="https://cdn.tailwindcss.com"><\/script>
-        <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-        <style>
-            @page { size: A4 portrait; margin: 5mm; }
-            body { 
-                font-family: 'Sarabun', sans-serif; 
-                background: #f8fafc; 
-                color: #0f172a; 
-                -webkit-print-color-adjust: exact !important; 
-                print-color-adjust: exact !important; 
-                zoom: 0.65;
-            }
-            .a4-container {
-                background: white;
-                width: 100%;
-                margin: 0 auto;
-                padding: 10mm;
-            }
-            
-            .print-card-item, .space-y-4 > div, .space-y-6 > div, .space-y-8 > div, tr, table {
-                page-break-inside: avoid !important;
-                break-inside: avoid !important;
-            }
-            
-            * { box-sizing: border-box !important; }
-            p, span, div, td, th, li {
-                word-wrap: break-word !important;
-                overflow-wrap: break-word !important;
-                word-break: break-word !important;
-                white-space: normal !important;
-                max-width: 100% !important;
-            }
-            
-            .a4-container { overflow: hidden !important; }
-            .print-card-item { margin-bottom: 20px !important; }
-
-            #report-printable-preview {
-                box-shadow: none !important;
-                border: none !important;
-                padding: 0 !important;
-                max-width: 100% !important;
-            }
-            h3, h4, h5 { color: #1e1b4b !important; font-weight: 700 !important; }
-            table { width: 100% !important; border-collapse: collapse; margin-top: 10px;  }
-            th { background-color: #f1f5f9 !important; color: #334155 !important; font-weight: bold; padding: 8px; text-align: left; border-bottom: 2px solid #cbd5e1; }
-            td { padding: 8px; border-bottom: 1px solid #e2e8f0; }
-            
-            @media print {
-                body { background: white; margin: 0; padding: 0; }
-                .a4-container { width: 100%; min-height: auto; margin: 0; padding: 0; box-shadow: none; }
-            }
-        </style>
-    </head>
-    <body>
-        <div class="a4-container">
-            <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #1e1b4b; padding-bottom: 10px;">
-                <h1 style="font-size: 24px; font-weight: bold; color: #1e1b4b; margin: 0;">รายงานสรุปสินทรัพย์ส่วนบุคคล (Asset Portfolio)</h1>
-                <p style="color: #64748b; font-size: 14px; margin-top: 5px;">จัดทำโดยระบบ PONDs Wealth Management</p>
-            </div>
-            ${previewNode.outerHTML}
-            
-            <div style="margin-top: 40px; text-align: center; font-size: 12px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px;">
-                เอกสารนี้ถูกสร้างขึ้นอัตโนมัติจากระบบ PONDs
-            </div>
-        </div>
-        <script>
             setTimeout(() => { window.print(); }, 1500);
-        <\/script>
-    </body>
-    </html>`;
-    
-    printWin.document.open();
-    printWin.document.write(html);
-    printWin.document.close();
-}; }, 1500);
         <\/script>
     </body>
     </html>
