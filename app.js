@@ -100,7 +100,7 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e =
 // Init Themes
 applyDisplayMode(currentDisplayMode, true);
 updateDisplayModeButtons();
-applyColorTheme(currentColorTheme);
+applyColorTheme(currentColorTheme, true);
 
 
 const themeToggle = document.getElementById('themeToggle');
