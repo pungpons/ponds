@@ -729,17 +729,6 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
     
 
 
-<style id="ios-safe-area-fix">
-  /* iOS Safe Area Fix for Dynamic Island */
-  header, [class*="sticky top-0"] {
-      padding-top: calc(env(safe-area-inset-top) + 8px) !important;
-  }
-  @media (min-width: 640px) {
-      header, [class*="sticky top-0"] {
-          padding-top: calc(env(safe-area-inset-top) + 16px) !important;
-      }
-  }
-</style>
 </head>
     <body>
         ${previewNode.outerHTML}
@@ -783,7 +772,19 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
         display: none !important;
     }
 }
-</style></head>
+</style>
+<style id="ios-safe-area-fix">
+  /* iOS Safe Area Fix for Dynamic Island */
+  header, [class*="sticky top-0"] {
+      padding-top: calc(env(safe-area-inset-top) + 8px) !important;
+  }
+  @media (min-width: 640px) {
+      header, [class*="sticky top-0"] {
+          padding-top: calc(env(safe-area-inset-top) + 16px) !important;
+      }
+  }
+</style>
+</head>
   <body>
     <div id="root"></div>
   

@@ -691,7 +691,7 @@ function renderApps() {
 
             // Navigate while overlay is fully covering screen — no flicker
             setTimeout(() => {
-                window.location.href = app.url;
+                window.location.href = app.url + '?v=' + new Date().getTime();
             }, 300);
         });
         
