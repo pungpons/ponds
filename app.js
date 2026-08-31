@@ -169,20 +169,6 @@ if (pondToken && settingsLogoutBtn) {
 }
 
 // Google Sign-In init
-window.onload = function () {
-    if (typeof google !== 'undefined') {
-        google.accounts.id.initialize({
-            client_id: "687258417937-2l06u8l73l0hsmf9570q88shd29s7i16.apps.googleusercontent.com",
-            // The callback is set by gas_backend.js globally on window
-        });
-        if (!localStorage.getItem('pond_ai_token')) {
-            google.accounts.id.renderButton(
-                document.querySelector(".g_id_signin"),
-                { theme: "outline", size: "large" }
-            );
-        }
-    }
-}
 
 const appsGrid = document.getElementById('appsGrid');
 let sortableInstance = null;
