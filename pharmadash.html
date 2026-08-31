@@ -75,7 +75,7 @@
         height: auto !important;
         min-height: auto !important;
         max-height: none !important;
-        overflow: visible !important;
+        overflow: visible !important; zoom: 0.8 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important;
         position: static !important;
         display: block !important;
     }
@@ -821,10 +821,7 @@ Error generating stack: `+i.message+`
                             </div>
                         `;
                         
-                        // 1. Destroy complex layout styles
-                        document.querySelectorAll('style').forEach(el => {
-                            if (el.id !== 'print-interceptor-styles') el.remove();
-                        });
+                        // KEEP styles for Tailwind
                         
                         // 2. Add print-specific styles
                         const style = document.createElement('style');

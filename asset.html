@@ -748,10 +748,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
             </div>
         `;
         
-        // 1. Destroy complex layout styles to prevent iOS WebKit flexbox blank page bugs
-        document.querySelectorAll('style').forEach(el => {
-            if (el.id !== 'print-interceptor-styles') el.remove();
-        });
+        // We KEEP the stylesheets so Tailwind works, because replacing innerHTML already destroys the #root flex layout!
         
         // 2. Add print-specific styles
         const style = document.createElement('style');
@@ -768,7 +765,7 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
                 position: static !important;
                 overflow: visible !important;
             }
-            body { zoom: 0.65; }
+            body { zoom: 0.65 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; font-family: 'Sarabun', sans-serif; }
             * { box-sizing: border-box !important; }
             @media print {
                 .no-print { display: none !important; }
