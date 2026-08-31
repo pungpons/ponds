@@ -964,8 +964,8 @@
         const close_delim = "\r\n--" + boundary + "--";
 
         let multipartRequestBody =
-            delimiter +
-            'Content-Type: application/json\r\n\r\n' +
+            '--' + boundary + '\r\n' +
+            'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
             JSON.stringify(metadata) +
             delimiter +
             'Content-Type: ' + mimeType + '\r\n' +
