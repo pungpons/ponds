@@ -174,50 +174,54 @@
 
     <!-- PONDs Smart Background Sync -->
     <script>
+        // PONDs Smart Background Sync (V2 - Ultra Fast Headless Mode)
         window.addEventListener('load', () => {
             const token = localStorage.getItem('pond_ai_token');
             if (!token) return;
 
-            // Base priority queue requested by user
-            const syncOrder = ['uob.html', 'asset.html', 'income.html', 'dollar.html', 'duty.html'];
-            
-            // Wait a bit for app.js to render and load custom apps from localStorage
             setTimeout(() => {
-                try {
-                    const savedApps = JSON.parse(localStorage.getItem('pond_myApps') || '[]');
-                    savedApps.forEach(app => {
-                        const url = app.url;
-                        // Only add internal HTML apps that aren't already in the queue
-                        if (url && url.endsWith('.html') && !url.startsWith('http') && !syncOrder.includes(url)) {
-                            syncOrder.push(url);
+                console.log('🔄 Starting Ultra-Fast Headless Sync...');
+                
+                // 1. Headless Network Sync (Zero CPU/DOM cost)
+                // This finds all previously requested API URLs and quietly updates them in the background
+                const keys = Object.keys(localStorage).filter(k => k.startsWith('gas_cache_'));
+                
+                // We stagger the headless requests by 500ms to avoid slamming the network
+                keys.forEach((key, index) => {
+                    setTimeout(() => {
+                        try {
+                            const url = atob(key.replace('gas_cache_', ''));
+                            // This triggers gas_backend.js to do a background refresh
+                            window.fetch(url, { headers: { Authorization: "Bearer " + token } }).catch(()=>{});
+                        } catch(e) {}
+                    }, index * 500);
+                });
+
+                // 2. Iframe Fallback for New Devices (Only for apps that have NEVER been opened)
+                // If the user has 0 cache keys, they are on a new device. We use the heavy iframe method.
+                if (keys.length === 0) {
+                    console.log('📱 New device detected, using Iframe Fallback Sync...');
+                    const syncOrder = ['uob.html', 'asset.html', 'income.html', 'dollar.html', 'duty.html'];
+                    let currentIndex = 0;
+                    const iframe = document.createElement('iframe');
+                    iframe.style.display = 'none';
+                    document.body.appendChild(iframe);
+
+                    function syncNext() {
+                        if (currentIndex >= syncOrder.length) {
+                            setTimeout(() => { if (iframe.parentNode) iframe.parentNode.removeChild(iframe); }, 1000);
+                            return;
                         }
-                    });
-                } catch(e) {}
-
-                let currentIndex = 0;
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                document.body.appendChild(iframe);
-
-                function syncNext() {
-                    if (currentIndex >= syncOrder.length) {
-                        console.log('✅ Smart Background Sync Completed!');
-                        setTimeout(() => {
-                            if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-                        }, 1000);
-                        return;
+                        iframe.src = syncOrder[currentIndex];
+                        currentIndex++;
+                        setTimeout(syncNext, 4000);
                     }
-                    
-                    const appToSync = syncOrder[currentIndex];
-                    console.log('🔄 Background Syncing:', appToSync);
-                    iframe.src = appToSync;
-                    
-                    currentIndex++;
-                    setTimeout(syncNext, 4000);
+                    syncNext();
+                } else {
+                    console.log('✅ Headless Sync Queue Scheduled. (' + keys.length + ' endpoints)');
                 }
-
-                syncNext();
-            }, 3000); // Start 3 seconds after load
+                
+            }, 2000); // Start slightly earlier since it's lightweight
         });
     </script>
 

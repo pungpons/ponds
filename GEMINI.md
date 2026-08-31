@@ -21,3 +21,8 @@ This document outlines critical architecture decisions and bug fixes for the PON
 ## 3. General Rules
 - **No Service Worker for HTML**: Do not register a Service Worker for intercepting HTML/Network requests, as it historically conflicts with the iOS print engine.
 - **Vercel Deployments**: Do not run \`vercel --prod\` locally. Push changes to GitHub and let Vercel auto-deploy.
+
+## 4. Smart Background Sync (V2 Headless Mode)
+- **Problem**: Pre-fetching apps via hidden iframes on the index page consumes excessive CPU/RAM because it evaluates React and Tailwind CDN multiple times.
+- **Solution**: The index page now reads all `gas_cache_*` keys from `localStorage`, decodes the URLs, and fires headless `fetch()` requests. `gas_backend.js` intercepts these, sees they are GET requests with existing cache, and triggers `backgroundFetch()` which quietly updates the JSON in `localStorage` without evaluating any DOM/UI code.
+- **Fallback**: If `localStorage` is completely empty (new device), it falls back to the iframe method for the core apps (`uob`, `asset`, `income`, `dollar`, `duty`).
