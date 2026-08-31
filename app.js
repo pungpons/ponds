@@ -658,7 +658,59 @@ function renderApps() {
             }
             if (!app.url) return;
 
-            // Native <a> tag navigation will happen automatically, keeping us inside the PWA without triggering the Safari toolbar
+            e.preventDefault(); // Stop the native <a> tag from navigating instantly
+
+            // 1. Icon bounce feedback
+            iconBtn.style.transition = 'transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            iconBtn.style.transform = 'scale(0.85)';
+            setTimeout(() => {
+                iconBtn.style.transform = 'scale(1.08)';
+                setTimeout(() => { iconBtn.style.transform = 'scale(1)'; }, 100);
+            }, 100);
+
+            // 2. Soft zoom-from-icon overlay that fades out as it expands
+            const rect = iconBtn.getBoundingClientRect();
+            const originX = ((rect.left + rect.width / 2) / window.innerWidth * 100).toFixed(2) + '%';
+            const originY = ((rect.top + rect.height / 2) / window.innerHeight * 100).toFixed(2) + '%';
+            const isDark = document.documentElement.classList.contains('dark');
+            const bg = isDark ? (app.darkGradient || app.lightGradient) : app.lightGradient;
+
+            const overlay = document.createElement('div');
+            overlay.className = 'launch-overlay';
+            overlay.style.cssText = `
+                position: fixed; inset: 0; z-index: 99999;
+                background: ${bg};
+                transform-origin: ${originX} ${originY};
+                transform: scale(0.1);
+                border-radius: 50%;
+                opacity: 1;
+                pointer-events: none;
+                transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease-out 0.1s;
+            `;
+            
+            const wash = document.createElement('div');
+            wash.style.cssText = `
+                position: absolute; inset: 0; border-radius: 50%;
+                background: ${isDark ? '#0f172a' : '#ffffff'};
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            `;
+            overlay.appendChild(wash);
+            document.body.appendChild(overlay);
+            
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    overlay.style.transform = 'scale(3)';
+                    overlay.style.opacity = '0';
+                    wash.style.opacity = '0.8';
+                });
+            });
+
+            setTimeout(() => {
+                window.location.href = app.url + '?v=' + new Date().getTime();
+            }, 300);
+
+            
         });
         
         appsGrid.appendChild(appEl);
