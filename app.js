@@ -586,7 +586,7 @@ function renderApps() {
     
     myApps.forEach((app, index) => {
         const appEl = document.createElement('a');
-        appEl.className = 'app-icon animate-bloom flex flex-col items-center gap-2 cursor-pointer select-none relative [-webkit-touch-callout:none]';
+        appEl.className = 'group app-icon animate-bloom flex flex-col items-center gap-2 cursor-pointer select-none relative [-webkit-touch-callout:none]';
         if (app.url) { appEl.href = app.url + '?v=' + new Date().getTime(); }
         // Add stagger delay for the bloom animation (e.g., 0.05s, 0.08s, 0.11s...)
         appEl.style.setProperty('--bloom-delay', `${0.05 + index * 0.03}s`);
@@ -620,7 +620,7 @@ function renderApps() {
         
         
         const iconBtn = document.createElement('div');
-        iconBtn.className = 'w-[72px] h-[72px] sm:w-20 sm:h-20 rounded-[22%] app-icon-3d flex items-center justify-center text-[34px] sm:text-4xl text-white font-bold transition-transform active:scale-95 duration-200 bg-cover bg-center overflow-hidden';
+        iconBtn.className = 'w-[72px] h-[72px] sm:w-20 sm:h-20 rounded-[22%] app-icon-3d flex items-center justify-center text-[34px] sm:text-4xl text-white font-bold transition-transform group-active:scale-95 duration-200 bg-cover bg-center overflow-hidden';
         
         if (app.customIconBase64) {
             // Apply image to the background and remove text
@@ -658,58 +658,6 @@ function renderApps() {
             }
             if (!app.url) return;
 
-            // 1. Icon bounce feedback
-            iconBtn.style.transition = 'transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1)';
-            iconBtn.style.transform = 'scale(0.85)';
-            setTimeout(() => {
-                iconBtn.style.transform = 'scale(1.08)';
-                setTimeout(() => { iconBtn.style.transform = 'scale(1)'; }, 100);
-            }, 100);
-
-            // 2. Soft zoom-from-icon overlay that fades out as it expands
-            const rect = iconBtn.getBoundingClientRect();
-            const originX = ((rect.left + rect.width / 2) / window.innerWidth * 100).toFixed(2) + '%';
-            const originY = ((rect.top + rect.height / 2) / window.innerHeight * 100).toFixed(2) + '%';
-            const isDark = document.documentElement.classList.contains('dark');
-            const bg = isDark ? (app.darkGradient || app.lightGradient) : app.lightGradient;
-
-            const overlay = document.createElement('div');
-            overlay.className = 'launch-overlay';
-            overlay.style.cssText = `
-                position: fixed; inset: 0; z-index: 99999;
-                background: ${bg};
-                transform-origin: ${originX} ${originY};
-                transform: scale(0.1);
-                border-radius: 50%;
-                opacity: 1;
-                pointer-events: none;
-                overflow: hidden;
-                transition: transform 0.32s cubic-bezier(0.32, 0, 0.15, 1),
-                            border-radius 0.32s cubic-bezier(0.32, 0, 0.15, 1);
-            `;
-            
-            // Add a wash layer to fade the vibrant gradient into a pastel color
-            const wash = document.createElement('div');
-            wash.style.cssText = `
-                position: absolute; inset: 0;
-                background: ${isDark ? '#0f172a' : '#ffffff'};
-                opacity: 0;
-                transition: opacity 0.32s ease-out;
-            `;
-            overlay.appendChild(wash);
-            
-            document.body.appendChild(overlay);
-
-            // Expand overlay and fade in the pastel wash
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    overlay.style.transform = 'scale(1)';
-                    overlay.style.borderRadius = '32px';
-                    wash.style.opacity = '0.8'; // Fades to 80% white/dark (pastel effect)
-                });
-            });
-
-            // Navigate while overlay is fully covering screen — no flicker
             // Native <a> tag navigation will happen automatically, keeping us inside the PWA without triggering the Safari toolbar
         });
         
