@@ -727,16 +727,16 @@ In order to be iterable, non-array objects must have a [Symbol.iterator]() metho
             }
         </style>
     
+
+
 <style id="ios-safe-area-fix">
   /* iOS Safe Area Fix for Dynamic Island */
-  @supports (padding-top: max(env(safe-area-inset-top), 0px)) {
-      header {
-          padding-top: max(env(safe-area-inset-top), 8px) !important;
-      }
-      @media (min-width: 640px) {
-          header {
-              padding-top: max(env(safe-area-inset-top), 16px) !important;
-          }
+  header, [class*="sticky top-0"] {
+      padding-top: calc(env(safe-area-inset-top) + 8px) !important;
+  }
+  @media (min-width: 640px) {
+      header, [class*="sticky top-0"] {
+          padding-top: calc(env(safe-area-inset-top) + 16px) !important;
       }
   }
 </style>

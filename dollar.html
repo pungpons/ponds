@@ -63,16 +63,16 @@ if (localStorage.getItem('pond_ai_token')) {
     // 👇 นำมาวางไว้บรรทัดแรกในแท็ก <script> ตรงนี้ได้เลยครับ 👇
     const GOOGLE_CLIENT_ID = "636153093113-figfghllvhd43j1ihlj3i8dog73r8kb9.apps.googleusercontent.com";
   </script>
+
+
 <style id="ios-safe-area-fix">
   /* iOS Safe Area Fix for Dynamic Island */
-  @supports (padding-top: max(env(safe-area-inset-top), 0px)) {
-      header {
-          padding-top: max(env(safe-area-inset-top), 8px) !important;
-      }
-      @media (min-width: 640px) {
-          header {
-              padding-top: max(env(safe-area-inset-top), 16px) !important;
-          }
+  header, [class*="sticky top-0"] {
+      padding-top: calc(env(safe-area-inset-top) + 8px) !important;
+  }
+  @media (min-width: 640px) {
+      header, [class*="sticky top-0"] {
+          padding-top: calc(env(safe-area-inset-top) + 16px) !important;
       }
   }
 </style>
