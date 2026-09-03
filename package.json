@@ -2,6 +2,9 @@
   "name": "ponds",
   "version": "1.0.0",
   "description": "PONDs Web App with GAS Backend",
+  "scripts": {
+    "restore-v1": "git reset --hard v1.0 && git push -f origin main"
+  },
   "dependencies": {
     "jsdom": "^30.0.1"
   }
