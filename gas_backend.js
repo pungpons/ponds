@@ -167,7 +167,14 @@ try {
             try {
                 const tempHeaders = new Headers(options.headers);
                 tempHeaders.forEach((value, key) => {
-                    plainHeaders[key] = value;
+                    // UrlFetchApp ignores lowercase 'content-type' and overrides it!
+                    if (key.toLowerCase() === 'content-type') {
+                        plainHeaders['Content-Type'] = value;
+                    } else if (key.toLowerCase() === 'authorization') {
+                        plainHeaders['Authorization'] = value;
+                    } else {
+                        plainHeaders[key] = value;
+                    }
                 });
             } catch (e) {
                 plainHeaders = Object.assign({}, options.headers);
