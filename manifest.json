@@ -1,11 +1,11 @@
 {
   "name": "PONDs Apps",
   "short_name": "POND",
-  "start_url": "index.html",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
-  "scope": "/",
+  "scope": ".",
   "icons": [
     {
       "src": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1024px-Google_%22G%22_logo.svg.png",

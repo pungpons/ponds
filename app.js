@@ -587,7 +587,7 @@ function renderApps() {
     myApps.forEach((app, index) => {
         const appEl = document.createElement('a');
         appEl.className = 'app-icon animate-bloom flex flex-col items-center gap-2 cursor-pointer select-none relative [-webkit-touch-callout:none]';
-        if (app.url) { appEl.href = app.url + '?v=' + new Date().getTime(); }
+        if (app.url) { appEl.href = app.url; }
         // Add stagger delay for the bloom animation (e.g., 0.05s, 0.08s, 0.11s...)
         appEl.style.setProperty('--bloom-delay', `${0.05 + index * 0.03}s`);
         
@@ -720,7 +720,7 @@ function renderApps() {
 
             // Navigate while overlay is fully covering screen — no flicker
             setTimeout(() => {
-                window.location.href = app.url + '?v=' + new Date().getTime();
+                window.location.replace(app.url);
             }, 300);
 
             
