@@ -302,6 +302,17 @@ async function loadAppsFromCloud(token) {
 async function saveAppsToCloud(token, isCreate = false) {
     if (!token) return;
     try {
+        if (!cloudConfigFileId) {
+            // Check if it already exists before creating to prevent duplicates
+            const searchRes = await fetch("https://www.googleapis.com/drive/v3/files?q=" + encodeURIComponent("name='pond_ai_config.json' and trashed=false"), {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const searchData = await searchRes.json();
+            if (searchData.files && searchData.files.length > 0) {
+                cloudConfigFileId = searchData.files[0].id;
+            }
+        }
+
         if (isCreate || !cloudConfigFileId) {
             // 1. Create empty file metadata
             const metaRes = await fetch('https://www.googleapis.com/drive/v3/files', {
