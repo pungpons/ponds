@@ -1082,7 +1082,7 @@
             }
             
             if (action === 'uploadMonthlyImage') {
-                const file = await driveApiUpload(payload.fileName, payload.base64Data, payload.mimeType, FOLDER_ID);
+                const file = await driveApiUpload(payload.fileName, payload.base64Data, payload.mimeType, payload.folderId || FOLDER_ID);
                 await driveApiShare(file.id);
                 const uploadedAt = new Date().toISOString();
                 
